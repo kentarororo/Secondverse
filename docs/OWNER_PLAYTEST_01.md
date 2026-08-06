@@ -9,12 +9,14 @@
 From the repository root:
 
 ```powershell
-npm run dev -- --host 127.0.0.1
+npm run playtest
 ```
 
-Open the URL printed by Vite, normally `http://127.0.0.1:5173/Secondverse/`.
+Open the URL printed by Vite: `http://127.0.0.1:4173/Secondverse/`.
 
-For a clean save, use a new private/incognito window. If you reuse a normal window, clear site data for `127.0.0.1:5173` before starting.
+The published build uses the same project path: `https://kentarororo.github.io/Secondverse/`.
+
+For a clean save, use a new private/incognito window. If you reuse a normal window, clear site data for `127.0.0.1:4173` before starting.
 
 ## Play without reading this section ahead
 

@@ -71,3 +71,10 @@ A playable first encounter pair exists. Human sessions: **0/5**. The hybrid pres
 - **Presentation evidence:** the condition is visible in results and preparation; normal playback is 70.2 seconds; desktop, 125% text, reduced motion, and mobile geometry pass without footer overlap.
 - **Human evidence:** none. Causality, interest, and desire to replay require owner/fresh-player observation.
 - **Verdict:** KEEP — hand to the owner before adding encounters three and four.
+
+## Delivery repair — GitHub Pages path — 2026-08-06
+
+- **Observed problem:** the supplied local project-path URL returned 404, and the repository had no Pages deployment workflow.
+- **Cause:** Vite used a relative base while the delivery guide and browser fixture used `/Secondverse/`; GitHub had no workflow that uploaded `dist` to Pages.
+- **Change:** use `/Secondverse/` for development and production, and deploy the built `dist` artifact through GitHub Pages Actions.
+- **Gate result:** production build passed; the focused Pages-path browser journey passed 1/1; the production preview reports the exact `/Secondverse/` URL.

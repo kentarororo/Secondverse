@@ -31,6 +31,7 @@ Backlog order follows player risk, not production breadth.
 - [x] Rerun the required-scope and reload browser journeys.
 - [x] Add one battle-derived Bruised/no-injury aftermath fact and next-battle effect.
 - [x] Persist and reload the condition through the save boundary.
+- [x] Align local and production builds to `/Secondverse/` and add a GitHub Pages deployment workflow.
 - [ ] Hand the complete encounter pair to the owner/fresh players before adding encounters three and four.
 
 ## LATER — gated work
