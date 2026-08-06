@@ -1,0 +1,25 @@
+export const COMBAT_TUNING = Object.freeze({
+  actionCap: 72,
+  techniquePointCap: 3,
+  techniqueCost: 2,
+  basicActionPower: 4,
+  damageVarianceMin: -1,
+  damageVarianceMax: 2,
+  braceGuard: 18,
+  heavyHitPower: 11,
+  followUpBonusPower: 6,
+  firstAidAmount: 24,
+  quickHelpGuard: 7,
+  waitForNeedHealthRatio: 0.6,
+  quickHelpHealthRatio: 1 / 3,
+  rearStrikePower: 40,
+  rearStrikeInterval: 3,
+  coverRearGuard: 8,
+  lineHitPower: 6,
+  breakThreshold: 3,
+  breakBonusPower: 8,
+  breakDefencePenalty: 5,
+  holdFrontStartingGuard: 18,
+});
+
+export type CombatTuning = typeof COMBAT_TUNING;
