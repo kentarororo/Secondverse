@@ -56,4 +56,24 @@ describe("candidate content", () => {
       type: "draft_candidate_roster", version: 1, poolVersion: 1, seed: "valid", count: 2,
     })).toThrow();
   });
+
+  it("uses canonical combat terms and executable timing in player rules",()=>{
+    const mechanicalText=[
+      ...CANDIDATE_CONTENT.signatures.map((value)=>value.rulesText),
+      ...CANDIDATE_CONTENT.advantages.map((value)=>value.rulesText),
+      ...CANDIDATE_CONTENT.complications.map((value)=>value.rulesText),
+      ...CANDIDATE_CONTENT.temperaments.map((value)=>value.rulesText),
+      ...CANDIDATE_CONTENT.techniques.map((value)=>value.rulesText),
+    ];
+    for(const text of mechanicalText){
+      expect(text).not.toMatch(/technique points?|\bhealth\b|\bcycle\b|\bturn\b/iu);
+    }
+    expect(CANDIDATE_CONTENT.techniques.every((value)=>value.rulesText.startsWith("This technique"))).toBe(true);
+    const scopedEffects=[...CANDIDATE_CONTENT.signatures,...CANDIDATE_CONTENT.advantages,...CANDIDATE_CONTENT.complications]
+      .map((value)=>value.rule.effect)
+      .concat(CANDIDATE_CONTENT.techniques.flatMap((value)=>value.effects));
+    for(const effect of scopedEffects){
+      if(effect.kind==="bonus_power"||effect.kind==="force_target") expect(effect.timing).toBeTruthy();
+    }
+  });
 });

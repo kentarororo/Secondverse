@@ -1729,6 +1729,35 @@ h3 {
   background: #13262c;
 }
 
+.candidate-selection-tray {
+  position: sticky;
+  z-index: 8;
+  top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-color: var(--focus);
+  background: #13262c;
+  box-shadow: 0 0.65rem 1.5rem rgb(0 0 0 / 0.35);
+}
+
+.candidate-selection-tray > div {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.candidate-selection-tray > div > strong {
+  font-size: 1.15rem;
+}
+
+.candidate-selection-tray p {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--muted);
+  text-align: right;
+}
+
 .candidate-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1756,6 +1785,17 @@ h3 {
   grid-template-columns: 4.8rem minmax(0, 1fr);
   align-items: center;
   gap: 0.75rem;
+}
+
+.candidate-title-block {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.candidate-title-block .button {
+  width: 100%;
+  margin-top: 0.3rem;
 }
 
 .candidate-portrait {
@@ -1808,6 +1848,34 @@ h3 {
 .candidate-fingerprint {
   border-top: 1px solid var(--line);
   padding-top: 0.7rem;
+}
+
+.candidate-details {
+  border-top: 1px solid var(--line);
+  padding-top: 0.15rem;
+}
+
+.candidate-details summary {
+  border-radius: 0.35rem;
+  padding: 0.55rem 0.25rem;
+  color: var(--signature);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.candidate-details summary:hover {
+  color: var(--ink);
+}
+
+.candidate-details summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.candidate-details-content {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.45rem;
 }
 
 .candidate-section-label,
@@ -1915,8 +1983,7 @@ h3 {
 
   .candidate-card-header,
   .candidate-identity,
-  .candidate-card > .button,
-  .candidate-fingerprint {
+  .candidate-details {
     grid-column: 1 / -1;
   }
   .screen {
@@ -1980,9 +2047,16 @@ h3 {
 
   .candidate-card-header,
   .candidate-identity,
-  .candidate-card > .button,
-  .candidate-fingerprint {
+  .candidate-details {
     grid-column: auto;
+  }
+
+  .candidate-selection-tray {
+    top: 0.35rem;
+  }
+
+  .candidate-selection-tray p {
+    text-align: left;
   }
 
   .candidate-tradeoffs {
@@ -2395,4 +2469,641 @@ h3 {
 .reduce-motion .reaction-break,
 .reduce-motion .reaction-defeat {
   transform: none;
+}
+
+.candidate-selection-tray-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.candidate-selection-tray-actions .button {
+  flex: 0 0 auto;
+}
+
+.candidate-trial-battle-screen,
+.candidate-trial-result-screen {
+  gap: 1rem;
+}
+
+.candidate-trial-header {
+  align-items: flex-start;
+}
+
+.candidate-trial-rule-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  padding: 0.7rem 0.9rem;
+  background: #13262c;
+}
+
+.candidate-trial-rule-banner strong {
+  flex: 0 0 auto;
+  color: var(--signature);
+}
+
+.candidate-trial-rule-banner span {
+  color: var(--muted);
+}
+
+.candidate-trial-stage-wrap {
+  position: relative;
+}
+
+.candidate-trial-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1rem;
+  min-height: 25rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.85rem;
+  padding: 1.1rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 65%, rgb(89 124 112 / 0.28), transparent 32%),
+    linear-gradient(180deg, #172d32 0 58%, #263830 58% 100%);
+  box-shadow: inset 0 -2rem 3rem rgb(0 0 0 / 0.22);
+}
+
+.candidate-trial-team {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  gap: 0.55rem;
+}
+
+.candidate-trial-team > .eyebrow {
+  text-align: center;
+}
+
+.candidate-trial-line {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.55rem;
+  height: 100%;
+}
+
+.candidate-trial-versus {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+
+.candidate-trial-unit {
+  display: grid;
+  align-content: end;
+  min-width: 0;
+  height: 20.5rem;
+  border: 1px solid rgb(182 213 203 / 0.15);
+  border-radius: 0.65rem;
+  padding: 0.55rem;
+  background: rgb(10 22 26 / 0.58);
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.candidate-trial-unit.is-candidate {
+  border-color: rgb(97 197 188 / 0.55);
+  background: rgb(16 47 49 / 0.72);
+}
+
+.candidate-trial-unit.is-acting {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgb(95 199 216 / 0.22), 0 0 1.8rem rgb(95 199 216 / 0.22);
+  transform: translateY(-0.35rem);
+}
+
+.candidate-trial-unit.is-targeted {
+  box-shadow: 0 0 0 3px rgb(235 168 94 / 0.3);
+}
+
+.candidate-trial-unit.is-defeated {
+  opacity: 0.5;
+  filter: grayscale(0.75);
+}
+
+.candidate-trial-unit-visual {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  min-height: 9.5rem;
+}
+
+.candidate-trial-figure {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 5.4rem;
+  height: 7.2rem;
+  transform-origin: bottom center;
+}
+
+.candidate-trial-figure.candidate-portrait {
+  width: 5.4rem;
+  height: 7.2rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.candidate-trial-figure.candidate-portrait::before {
+  opacity: 0.45;
+}
+
+.training-figure .silhouette-head {
+  position: absolute;
+  top: 0.5rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 48% 52% 42% 58%;
+  background: #79918b;
+}
+
+.training-figure .silhouette-body {
+  position: absolute;
+  bottom: 0.2rem;
+  width: 4.2rem;
+  height: 5rem;
+  border-radius: 48% 48% 18% 18%;
+  background: #526e69;
+  clip-path: polygon(28% 0, 72% 0, 100% 100%, 0 100%);
+}
+
+.training-figure.role-striker {
+  transform: skewX(-5deg);
+}
+
+.training-figure.role-harrier {
+  transform: scale(0.86) rotate(2deg);
+}
+
+.candidate-trial-unit-copy {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.trial-unit-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.trial-unit-heading strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trial-unit-heading span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+}
+
+.trial-hp-track {
+  height: 0.45rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #081417;
+}
+
+.trial-hp-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b94d4d, #e39f62);
+  transition: width 180ms ease;
+}
+
+.trial-hp-copy,
+.trial-resource-row {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.trial-resource-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.55rem;
+}
+
+.trial-status-row {
+  display: flex;
+  min-height: 1.25rem;
+  gap: 0.3rem;
+}
+
+.trial-status {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.08rem 0.42rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.trial-status.is-risk {
+  border-color: rgb(222 114 101 / 0.55);
+  color: #f0a49a;
+}
+
+.candidate-trial-floats {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.trial-float {
+  --float-index: 0;
+  position: absolute;
+  top: calc(8% + var(--float-index) * 1.65rem);
+  left: 50%;
+  min-width: max-content;
+  border: 1px solid rgb(94 196 185 / 0.45);
+  border-radius: 999px;
+  padding: 0.18rem 0.45rem;
+  background: rgb(8 20 23 / 0.9);
+  color: #9ce0c9;
+  font-size: 0.72rem;
+  font-weight: 900;
+  transform: translateX(-50%);
+  animation: candidate-trial-float 900ms ease both;
+}
+
+.trial-float.is-loss {
+  border-color: rgb(228 113 93 / 0.55);
+  color: #ff9e8c;
+}
+
+@keyframes candidate-trial-float {
+  from { opacity: 0; transform: translate(-50%, 0.45rem) scale(0.9); }
+  20%, 75% { opacity: 1; }
+  to { opacity: 0.9; transform: translate(-50%, -0.55rem) scale(1); }
+}
+
+.candidate-trial-ribbon {
+  position: absolute;
+  top: 3.3rem;
+  left: 50%;
+  z-index: 8;
+  display: grid;
+  min-width: 14rem;
+  border: 1px solid var(--focus);
+  border-radius: 0.55rem;
+  padding: 0.5rem 0.8rem;
+  background: rgb(8 24 28 / 0.94);
+  text-align: center;
+  transform: translateX(-50%);
+  box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 0.4);
+}
+
+.candidate-trial-ribbon span {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.candidate-trial-ribbon.is-risk {
+  border-color: #d66f62;
+}
+
+.candidate-trial-reading-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(17rem, 0.8fr);
+  gap: 0.8rem;
+}
+
+.candidate-trial-moment,
+.candidate-kit-tracker,
+.candidate-trial-kit-report,
+.candidate-trial-profile-details,
+.candidate-trial-details {
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #112329;
+}
+
+.candidate-trial-moment,
+.candidate-kit-tracker,
+.candidate-trial-kit-report {
+  padding: 0.85rem;
+}
+
+.candidate-kit-tracker h2 {
+  margin: 0.12rem 0 0.55rem;
+  font-size: 1.1rem;
+}
+
+.candidate-kit-tracker ul,
+.candidate-trial-technique-report ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 0.35rem;
+  list-style: none;
+}
+
+.candidate-kit-tracker li {
+  display: grid;
+  border-left: 3px solid var(--line-strong);
+  padding: 0.35rem 0.5rem;
+  gap: 0.06rem;
+}
+
+.candidate-kit-tracker li.has-triggered {
+  border-left-color: var(--focus);
+  background: rgb(69 145 140 / 0.12);
+}
+
+.candidate-kit-tracker li > span,
+.candidate-kit-tracker li > small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: capitalize;
+}
+
+.candidate-trial-details,
+.candidate-trial-profile-details {
+  padding: 0.3rem 0.75rem;
+}
+
+.candidate-trial-details summary,
+.candidate-trial-profile-details summary {
+  padding: 0.65rem 0;
+  color: var(--signature);
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.candidate-trial-details ol {
+  display: grid;
+  max-height: 25rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  overflow: auto;
+  gap: 0.25rem;
+  list-style: none;
+}
+
+.candidate-trial-details li {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: 0.6rem;
+  border-left: 2px solid var(--line);
+  padding: 0.32rem 0.5rem;
+}
+
+.candidate-trial-details li.is-current {
+  border-left-color: var(--focus);
+  background: rgb(72 152 147 / 0.12);
+}
+
+.candidate-trial-details li > span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.candidate-trial-details p {
+  margin: 0;
+}
+
+.candidate-trial-motion {
+  justify-self: end;
+}
+
+.candidate-trial-result-header p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.candidate-trial-report-heading {
+  margin-bottom: 0.8rem;
+}
+
+.candidate-trial-report-heading h2 {
+  margin: 0.15rem 0 0;
+}
+
+.candidate-trial-rule-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.candidate-trial-rule-result {
+  display: grid;
+  align-content: start;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  padding: 0.75rem;
+  gap: 0.35rem;
+  background: #0c1c21;
+}
+
+.candidate-trial-rule-result.is-risk {
+  border-color: rgb(218 104 91 / 0.42);
+}
+
+.candidate-trial-rule-result.did-trigger {
+  box-shadow: inset 0 3px 0 rgb(89 192 179 / 0.55);
+}
+
+.candidate-trial-rule-result h3,
+.candidate-trial-rule-result p {
+  margin: 0;
+}
+
+.candidate-trial-rule-result p {
+  color: var(--muted);
+}
+
+.candidate-trial-rule-result > strong {
+  margin-top: auto;
+  color: var(--signature);
+}
+
+.candidate-rule-outcome {
+  border-top: 1px solid var(--line);
+  padding-top: 0.35rem;
+  color: var(--ink);
+  font-size: 0.74rem;
+}
+
+.candidate-trial-technique-report {
+  margin-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.7rem;
+}
+
+.candidate-trial-technique-report h3 {
+  margin: 0 0 0.45rem;
+}
+
+.candidate-trial-technique-report li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  background: #0c1c21;
+}
+
+.candidate-trial-technique-report li span {
+  color: var(--muted);
+}
+
+.candidate-trial-profile-details dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  gap: 0.45rem;
+}
+
+.candidate-trial-profile-details dl > div {
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  padding: 0.5rem;
+}
+
+.candidate-trial-profile-details dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.candidate-trial-profile-details dd {
+  margin: 0.15rem 0 0;
+  font-weight: 800;
+}
+
+.candidate-trial-result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .candidate-selection-tray,
+  .candidate-selection-tray-actions,
+  .candidate-trial-header,
+  .candidate-trial-rule-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .candidate-selection-tray-actions p {
+    text-align: left;
+  }
+
+  .candidate-trial-stage {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-trial-versus {
+    justify-self: center;
+  }
+
+  .candidate-trial-unit {
+    height: 15.5rem;
+  }
+
+  .candidate-trial-unit-visual {
+    min-height: 6.5rem;
+  }
+
+  .candidate-trial-figure,
+  .candidate-trial-figure.candidate-portrait {
+    width: 4rem;
+    height: 5.3rem;
+  }
+
+  .candidate-trial-reading-grid,
+  .candidate-trial-rule-results {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-trial-profile-details dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .candidate-selection-tray-actions .button,
+  .candidate-trial-result-actions .button {
+    width: 100%;
+  }
+
+  .candidate-trial-line {
+    gap: 0.28rem;
+  }
+
+  .candidate-trial-stage {
+    padding: 0.7rem 0.45rem;
+  }
+
+  .candidate-trial-unit {
+    height: 13.4rem;
+    padding: 0.35rem;
+  }
+
+  .candidate-trial-unit-visual {
+    min-height: 5.5rem;
+  }
+
+  .candidate-trial-figure,
+  .candidate-trial-figure.candidate-portrait {
+    width: 3.3rem;
+    height: 4.5rem;
+  }
+
+  .trial-unit-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .trial-unit-heading strong {
+    width: 100%;
+    font-size: 0.72rem;
+  }
+
+  .trial-hp-copy,
+  .trial-resource-row {
+    font-size: 0.62rem;
+  }
+
+  .candidate-trial-ribbon {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    min-width: 0;
+    margin-top: 0.45rem;
+    transform: none;
+  }
+
+  .candidate-trial-details li {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .candidate-trial-profile-details dl {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-trial-result-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }

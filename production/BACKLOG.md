@@ -63,12 +63,21 @@ Backlog order follows player risk, not production breadth.
 - [x] Fix the duplicate-name issue found by independent QA by filtering already-used identity IDs without changing mechanical generation.
 - [x] Pass final automation: candidate Playwright 3/3, full Playwright 30/30 in 2.2 minutes, normal playback 39.6 seconds, Vitest 98/98, and a 160-module typechecked production build.
 - [ ] Evaluate mobile comparison scroll density during the owner playtest; the orphan-period status wrap is fixed.
-- [ ] Run the candidate human gate: state why each differs, choose for a mechanical or build reason, identify one risk or tradeoff, and voluntarily request another roster.
+- [x] Run the candidate human gate: semantic variance, a mechanically reasoned favorite, a meaningful persistent risk, and voluntary **Show new candidates** all passed.
 - [x] Keep combat integration, final art, campaign, currencies, broad biographies, arbitrary fragment prose, and encounters three and four out of this iteration.
+- [x] Record Candidate Draft Lab human verdict KEEP while keeping fresh sessions at 1/5.
+- [x] Keep unlimited new sets explicitly lab-only.
+- [x] Defer rarity weighting and recruitment cost/resources until a real run loop supplies a source and sink.
+- [x] Define the next one-risk iteration before source work: Single-Candidate Combat Trial.
+- [x] Build the smallest controlled fight for one selected generated candidate with two fixed partners and three fixed opponents.
+- [x] Emit exact structured trigger and mutation events for every candidate Signature, Advantage, Risk, and technique used by the trial.
+- [x] Prove deterministic replay, provenance, all 36 core builds, 300 generated candidates, battle termination, causal reporting, and truthful card-to-battle copy.
+- [ ] Run the human combat-trial gate: name two activated candidate rules, connect one to a numerical/status result, and decide whether to recruit.
+- [x] Keep full roster replacement, currency/economy, large content expansion, and an art batch outside the combat trial.
 
 ## LATER — gated work
 
-- [ ] Phase 3 beyond the candidate draft lab: fieldable recruitment and combat integration remain gated.
+- [ ] Phase 3 beyond the controlled trial: full roster replacement and recruitment integration remain gated.
 - [ ] Phase 4: run structure and progression.
 - [ ] Phase 5: representative art, audio, and UX vertical slice.
 - [ ] Phase 6: fact-driven emergent narrative.

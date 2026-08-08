@@ -97,3 +97,27 @@
 - **Human gate:** The owner must state why each candidate differs, explain a favorite choice, identify one risk or tradeoff, and voluntarily request a new set. Automated checks cannot answer these questions.
 - **Gate rule:** Fresh sessions remain 1/5 and the Phase 2 gate has not passed. Candidates remain comparison-only and not fieldable; combat integration stays gated.
 - **Reversible:** Candidate content, generation weights, and comparison presentation may change after the owner playtest without changing authored combat.
+
+## 2026-08-08 — Candidate Draft Lab passes its human gate
+
+- **Decision:** Mark the bounded Seeded Candidate Draft Lab **KEEP**. The owner distinguished meaningful stat, advantage, technique, and numerical variance; chose a basic-attack and technique-point ramping combination for a mechanical reason; identified persistent Strain after Guard as a meaningful risk; and voluntarily requested a new set.
+- **Product learning:** The draw is finding a rare combination whose rules work together, not merely seeing a new name. Preserve semantic combinations and understandable risks as the center of candidate discovery.
+- **Reroll boundary:** Unlimited **Show new candidates** use is a lab-only affordance. Do not add rarity weights, recruitment prices, or a currency until the run loop supplies a real source and sink.
+- **Session rule:** This was the same owner as the prior playtests. Fresh human sessions remain 1/5, and the Phase 2 exit has not passed.
+- **Next iteration:** Record and then build only the smallest Single-Candidate Combat Trial. One selected generated hero enters a controlled fight so card promises can be judged as executable rules.
+- **Trial gate:** The owner names at least two candidate rules that activated, connects one to a numerical or status outcome, and says whether they would recruit the candidate.
+- **Scope rule:** Exclude full campaign roster replacement, currency/economy, large content expansion, and an art batch.
+- **Automated rule:** Protect deterministic replay, exact structured trigger events, one semantic fixture, battle termination, and truthful UI copy.
+- **Current result:** PENDING. The iteration packet exists before source implementation; no implementation result is claimed.
+- **Reversible:** The controlled fixture can be revised without committing the campaign roster or economy to a wider recruitment design.
+
+## 2026-08-08 — Single-Candidate Combat Trial passes automation
+
+- **Decision:** Keep the controlled candidate battle implementation for owner testing. Mark the bounded result **AUTOMATED KEEP — READY FOR OWNER PLAYTEST**; do not begin full roster replacement or recruitment economy yet.
+- **Combat boundary:** A selected candidate joins two fixed training partners against three fixed opponents. This exercises generated rules without changing the authored Ada/Bo/Cy battle engine or claiming campaign integration.
+- **Presentation decision:** Keep battlefield-first playback, flying exact deltas, a live Signature/Advantage/Risk tracker, and a concise result report. The complete event list stays closed by default.
+- **QA learning:** A live rule moment originally included unrelated changes that occurred before the next highlight. Rule summaries now follow only typed causal descendants. Measured Combo reports only its Points gain; Shared Strain retains only its Strain and directly caused Broken chain.
+- **Evidence:** Typecheck and 172-module build passed; Vitest 115/115 passed; focused candidate-trial Playwright 3/3 and final full Playwright 33/33 passed; 36/36 core builds and 300/300 sampled candidates terminated; independent QA found no remaining P0–P3 issue; the mobile activation ribbon intersects 0/6 fighter cards.
+- **Human gate:** The owner names at least two candidate rules that activated, connects one to a numerical or status outcome, and says whether they would recruit that candidate.
+- **Economy rule:** Unlimited new candidates remain a lab affordance. Rarity and recruitment cost wait for a run with a real source and sink.
+- **Reversible:** The fixed training fixture, profile conversions, playback timing, and presentation can be tuned without committing the campaign roster or economy.

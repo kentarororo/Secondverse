@@ -13,8 +13,9 @@ const FORBIDDEN_EQUIPMENT_PHRASE = /wears it in front/i;
 async function candidateBuildIds(cards: Locator): Promise<string[]> {
   const ids: string[] = [];
   for (const card of await cards.all()) {
-    const text = await card.getByText(/^Build ID /).innerText();
-    ids.push(text.replace(/^Build ID /, ""));
+    const id = await card.getAttribute("data-build-id");
+    if (!id) throw new Error("Candidate card is missing its stable build ID");
+    ids.push(id);
   }
   return ids;
 }
@@ -29,17 +30,25 @@ async function expectStructuredCandidateCards(page: Page): Promise<Locator> {
     await expect(card.getByRole("region", { name: `${name} techniques` })).toContainText(
       "Starting techniques",
     );
-    await expect(card.getByRole("region", { name: `${name} draft scores` })).toContainText(
+    await expect(card.getByRole("region", { name: `${name} starting stats` })).toContainText(
       /Vitality.*Power.*Guard.*Speed.*Focus/i,
+    );
+    await expect(card.getByRole("region", { name: `${name} starting stats` })).toContainText(
+      "Starting stats",
     );
     const tradeoffs = card.getByRole("region", { name: `${name} tradeoffs` });
     await expect(tradeoffs).toContainText("Advantage");
     await expect(tradeoffs).toContainText("Risk");
-    await expect(card).toContainText("Potential clue");
-    await expect(card).toContainText("Unknown: exact late growth.");
-    await expect(card).toContainText("Build fingerprint");
-    await expect(card.getByText(/^Build ID [0-9a-f]{8}$/)).toBeVisible();
-    await expect(card.getByRole("button", { name: new RegExp(`^Choose ${name}$`) })).toBeVisible();
+    const details = card.locator("details");
+    await expect(details.getByText("Candidate details", { exact: true })).toBeVisible();
+    await expect(details.getByRole("region", { name: `${name} candidate details` })).not.toBeVisible();
+    await details.getByText("Candidate details", { exact: true }).click();
+    await expect(details).toContainText("Growth clue");
+    await expect(details).toContainText("Exact later growth is still unknown.");
+    await expect(details).toContainText("Build fingerprint");
+    await expect(details.getByText(/^Build ID [0-9a-f]{8}$/)).toBeVisible();
+    await details.getByText("Candidate details", { exact: true }).click();
+    await expect(card.getByRole("button", { name: new RegExp(`^Select ${name}$`) })).toBeVisible();
 
     for (const paragraph of await card.locator("p").all()) {
       await expect(paragraph).toHaveText(/[.!?]$/);
@@ -73,10 +82,11 @@ test.describe("candidate draft desktop", () => {
     await expectNoHorizontalPageScroll(page);
 
     await page.getByRole("button", { name: "Candidate trial" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Choose a future recruit" }))
+    await expect(page.getByRole("heading", { level: 1, name: "Choose a fighter to test" }))
       .toBeVisible();
-    await expect(page.getByText("Comparison only.", { exact: true })).toBeVisible();
-    await expect(page.getByText(/does not change the current battle team yet/i)).toBeVisible();
+    await expect(page.getByText("Trial selection.", { exact: true })).toBeVisible();
+    await expect(page.getByText(/will enter a real battle trial/i)).toBeVisible();
+    await expect(page.getByText(/current three-person team stays unchanged/i)).toBeVisible();
     const firstCards = await expectStructuredCandidateCards(page);
     const firstBuildIds = await candidateBuildIds(firstCards);
     await expectNoHorizontalPageScroll(page);
@@ -87,13 +97,18 @@ test.describe("candidate draft desktop", () => {
 
     const firstName = await firstCards.first().getByRole("heading", { level: 2 }).innerText();
     const chooseFirst = firstCards.first().getByRole("button", {
-      name: `Choose ${firstName}`,
+      name: `Select ${firstName}`,
     });
     await chooseFirst.click();
-    await expect(page.getByRole("status")).toContainText(`Favorite recorded: ${firstName}.`);
+    await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
+      `Selected for trial${firstName}`,
+    );
+    await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
+      "The trial will use this exact kit.",
+    );
     await expect(firstCards.first()).toHaveClass(/is-selected/);
     await expect(firstCards.first().locator('button[aria-pressed="true"]')).toHaveAccessibleName(
-      `${firstName} is your favorite`,
+      `${firstName} selected`,
     );
 
     await page.getByRole("button", { name: "Show new candidates" }).click();
@@ -143,16 +158,18 @@ test.describe("candidate draft desktop", () => {
     const candidateTrial = page.getByRole("button", { name: "Candidate trial" });
     await tabTo(page, candidateTrial);
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("heading", { name: "Choose a future recruit" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Choose a fighter to test" })).toBeVisible();
 
     const firstChoose = page.locator(".candidate-card").first().getByRole("button", {
-      name: /^Choose /,
+      name: /^Select /,
     });
     await tabTo(page, firstChoose, 60);
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("status")).toContainText("Favorite recorded:");
+    await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
+      "Selected for trial",
+    );
     await expect(page.locator(".candidate-card").first().locator('button[aria-pressed="true"]'))
-      .toHaveAccessibleName(/ is your favorite$/);
+      .toHaveAccessibleName(/ selected$/);
 
     const newSet = page.getByRole("button", { name: "Show new candidates" });
     await tabTo(page, newSet, 60);
@@ -177,8 +194,10 @@ test.describe("candidate draft mobile and reduced motion", () => {
     const cards = await expectStructuredCandidateCards(page);
     await expectNoHorizontalPageScroll(page);
     const thirdName = await cards.nth(2).getByRole("heading", { level: 2 }).innerText();
-    await cards.nth(2).getByRole("button", { name: `Choose ${thirdName}` }).click();
-    await expect(page.getByRole("status")).toContainText(`Favorite recorded: ${thirdName}.`);
+    await cards.nth(2).getByRole("button", { name: `Select ${thirdName}` }).click();
+    await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
+      `Selected for trial${thirdName}`,
+    );
     await page.screenshot({
       path: "test-results/evidence/candidate-lab-mobile-reduced.png",
       fullPage: true,

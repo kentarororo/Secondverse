@@ -181,13 +181,20 @@ export type RuleTarget =
 export type RuleEffect =
   | { readonly kind: "gain_guard"; readonly amount: number }
   | { readonly kind: "gain_points"; readonly amount: 1 }
-  | { readonly kind: "bonus_power"; readonly amount: number; readonly uses: 1 }
+  | {
+      readonly kind: "bonus_power";
+      readonly amount: number;
+      readonly uses: 1;
+      readonly timing: "immediate_technique_attack" | "next_attack" | "next_technique";
+    }
   | { readonly kind: "heal"; readonly amount: number }
   | { readonly kind: "add_strain"; readonly amount: 1 }
   | { readonly kind: "lose_guard"; readonly amount: number }
   | {
       readonly kind: "force_target";
       readonly target: "front_enemy" | "lowest_health_enemy";
+      readonly uses: 1;
+      readonly timing: "immediate_technique" | "next_attack";
     };
 
 export interface MechanicalRule {

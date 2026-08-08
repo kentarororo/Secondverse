@@ -64,11 +64,17 @@ const ruleTargetSchema = z.enum([
 const ruleEffectSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("gain_guard"), amount: z.number().int().min(1).max(30) }).strict(),
   z.object({ kind: z.literal("gain_points"), amount: z.literal(1) }).strict(),
-  z.object({ kind: z.literal("bonus_power"), amount: z.number().int().min(1).max(20), uses: z.literal(1) }).strict(),
+  z.object({
+    kind: z.literal("bonus_power"), amount: z.number().int().min(1).max(20), uses: z.literal(1),
+    timing: z.enum(["immediate_technique_attack", "next_attack", "next_technique"]),
+  }).strict(),
   z.object({ kind: z.literal("heal"), amount: z.number().int().min(1).max(30) }).strict(),
   z.object({ kind: z.literal("add_strain"), amount: z.literal(1) }).strict(),
   z.object({ kind: z.literal("lose_guard"), amount: z.number().int().min(1).max(30) }).strict(),
-  z.object({ kind: z.literal("force_target"), target: z.enum(["front_enemy", "lowest_health_enemy"]) }).strict(),
+  z.object({
+    kind: z.literal("force_target"), target: z.enum(["front_enemy", "lowest_health_enemy"]),
+    uses: z.literal(1), timing: z.enum(["immediate_technique", "next_attack"]),
+  }).strict(),
 ]);
 
 const mechanicalRuleSchema = z

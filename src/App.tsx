@@ -7,6 +7,8 @@ import { useStudioStore } from "./state/studioStore";
 import { SaveRepositoryProvider } from "./state/repositoryContext";
 import { SaveNotice } from "./ui/SaveNotice";
 import { CandidateLabScreen } from "./ui/CandidateLabScreen";
+import { CandidateTrialBattleScreen } from "./ui/CandidateTrialBattleScreen";
+import { CandidateTrialResultScreen } from "./ui/CandidateTrialResultScreen";
 
 export function App({ repository }: { readonly repository?: SaveRepository<CombatLabSave> }) {
   const screen = useStudioStore((state) => state.screen);
@@ -54,6 +56,8 @@ export function App({ repository }: { readonly repository?: SaveRepository<Comba
         {screen === "battle" ? <BattleScreen /> : null}
         {screen === "result" ? <ResultScreen /> : null}
         {screen === "candidates" ? <CandidateLabScreen /> : null}
+        {screen === "candidate_trial_battle" ? <CandidateTrialBattleScreen /> : null}
+        {screen === "candidate_trial_result" ? <CandidateTrialResultScreen /> : null}
       </main>
     </SaveRepositoryProvider>
   );

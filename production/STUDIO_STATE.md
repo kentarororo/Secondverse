@@ -2,12 +2,12 @@
 
 **Updated:** 2026-08-08
 **Phase:** 2 — Combat Laboratory  
-**Repository:** Branch `codex/reimagine-core-loop`; baseline HEAD/origin `5d34dbc`; current iteration uncommitted.
-**Status:** Seeded Candidate Draft Lab READY FOR OWNER PLAYTEST after automated KEEP; Key Moments KEEP WITH LIMITATION; whole prototype REVISE — functional but flat; fresh sessions remain 1/5
+**Repository:** Branch `codex/reimagine-core-loop`; baseline HEAD/origin `5f47116`; current iteration uncommitted.
+**Status:** Seeded Candidate Draft Lab KEEP; Single-Candidate Combat Trial automated KEEP and READY FOR OWNER PLAYTEST; Key Moments KEEP WITH LIMITATION; whole prototype REVISE — functional but flat; fresh sessions remain 1/5
 
 ## Highest-risk unanswered player-experience question
 
-Will three seeded, mechanically distinct candidates create a reasoned favorite and make the player voluntarily request another roster?
+Will one selected generated candidate produce a visible, causal kit identity when its card promises are executed in a controlled fight?
 
 ## Completed iteration — First Encounter Pair Foundation
 
@@ -90,7 +90,7 @@ Will three seeded, mechanically distinct candidates create a reasoned favorite a
 - **Result:** KEEP WITH LIMITATION by the owner. Pacing is acceptable and the key report or aftermath explanation is sufficient at this stage, but live stance activation and Bruised notice did not pass and are not claimed solved for fresh players. Automated evidence remains green: typecheck; Vitest 86/86; 151-module production build; Playwright 27/27 in 2.2 minutes; focused Key Moments 3/3; normal playback 39.8 seconds; 28 displayed key moments versus 279 raw events; no P0–P2 source defect or console, page, network, layout, or fallback issue.
 - **Next highest-risk question:** Can seeded candidate comparison create discovery and attachment before any candidate is made fieldable?
 
-## Current iteration — Seeded Candidate Draft Lab
+## Completed iteration — Seeded Candidate Draft Lab
 
 - **Player problem:** The fixed authored trio has no hero discovery, comparison, or attachment choice.
 - **Falsifiable hypothesis:** Three deterministic, compatibility-checked candidates with plain mechanical comparisons will cause the player to make a reasoned choice and voluntarily request another roster.
@@ -103,22 +103,36 @@ Will three seeded, mechanically distinct candidates create a reasoned favorite a
 - **Seed evidence:** Across 100 deterministic seeds, generation succeeded 100/100 and produced 300 candidates, 298 semantic fingerprints, 36 core builds, minimum semantic distance 3, 93% multi-chassis sets, full required content coverage, and average 1.07 / maximum 2 retries.
 - **QA learning:** Independent QA found a same-set duplicate-name issue. Identity filtering now excludes already-used identity IDs before the identity stream chooses, without tying cosmetic identity to mechanical generation. The focused and full browser gates passed afterward.
 - **Presentation note:** The orphan-period wrap in the mobile favorite status was fixed. Comparing three full mobile cards still requires substantial vertical scrolling; keep this as P2 polish evidence for the owner playtest.
-- **Result:** **IN PROGRESS — READY FOR OWNER PLAYTEST.** Automated verdict: **KEEP**. Do not mark the iteration complete until the human draft gate is observed.
-- **Next highest-risk question:** Can the owner state why each candidate differs, give a reason for a favorite, identify one risk, and voluntarily request a new set?
+- **Human evidence:** The owner identified useful variation across stats, advantages, technique effects, and numbers; favored a basic-attack and technique-point ramping combination; treated persistent Strain after Guard as a meaningful risk; and voluntarily chose **Show new candidates**.
+- **Result:** **KEEP.** The automated and human gates passed for the bounded comparison lab.
+- **Economy boundary:** Unlimited new sets remain a lab-only affordance. Rarity weighting and recruitment cost or resources wait until a real run loop provides a source and sink.
+- **Gate discipline:** This was the same owner, so fresh sessions remain 1/5 and the Phase 2 exit has not passed. Candidates remain outside the campaign roster.
+- **Next highest-risk question:** Can a selected candidate's promised mechanics read clearly when executed in combat?
 
-## Likely files and systems at risk after approval
+## Current iteration — Single-Candidate Combat Trial
 
-- Candidate content schema, compatibility rules, and named RNG streams
-- Deterministic candidate generation, fingerprints, and duplicate rejection
-- Candidate comparison, favorite, and reroll application state
-- Candidate-lab UI, accessibility, responsive layout, and current-loop copy
-- Vitest and Playwright fixtures
+- **Player problem:** Candidate cards promise distinct mechanics, but those promises are not yet executable or fieldable.
+- **Falsifiable hypothesis:** If one selected generated hero enters a controlled fight, the player will see a causal kit identity rather than only reading a comparison card.
+- **Playable scope:** Choose one generated candidate, place that candidate with two fixed training partners against three fixed opponents, play the fight through battlefield-first Key Moments, and expose the candidate's selected rules through visible combat facts and a concise kit report.
+- **Explicit exclusions:** No full campaign roster replacement, currency or economy, large content expansion, or art batch.
+- **Human success criteria:** The owner names at least two candidate rules that activated, connects one rule to a numerical or status outcome, and says whether they would recruit that candidate.
+- **Automated protection:** Deterministic replay and provenance validation; exact structured trigger and mutation events; all 36 core builds; 300 generated candidates from 100 seeds; battle termination; causal presentation regressions; desktop, mobile, reduced-motion, keyboard, and complete browser journeys; truthful UI copy; no `Math.random`.
+- **Result:** **AUTOMATED KEEP — READY FOR OWNER PLAYTEST.** The controlled trial, six-unit battlefield, typed rule tracker, exact kit report, and visual placeholder seam are complete. Independent QA found no remaining P0–P3 issue after causal summaries were narrowed to their true descendants and the mobile activation ribbon was docked below the battlefield. Human recruitment intent remains unproven.
+- **Evidence:** Typecheck and 172-module production build passed; Vitest 115/115 passed; focused candidate-trial Playwright 3/3 and final full Playwright 33/33 passed; all 36 core builds and 300 candidates terminated; Measured Combo reports only its Points gain; Shared Strain reports only its Strain and directly caused Broken chain; mobile ribbon overlaps 0/6 fighter cards.
+- **Next highest-risk question:** Whether a generated candidate's card promises survive contact with the battlefield and create recruitment intent.
+
+## Implemented trial boundaries
+
+- Candidate-to-combat command and controlled fixture boundary are isolated from the authored encounter pair.
+- Candidate rule resolution emits exact structured trigger and mutation events.
+- Battlefield and result presentation render generated rules and outcomes without inventing facts.
+- Deterministic replay, termination, generated coverage, causal summaries, and browser journeys are protected.
 
 ## Session protocol check
 
 - Required files inspected: absent at start; created in this session.
 - Repository and test state inspected: strict app, simulation, save boundary, and browser suite are present and green.
-- Implementation state: the authored two-encounter loop, Key Moments Playback, candidate draft lab, and concurrent plain-language repair are playable; the candidate iteration now waits on its owner playtest.
+- Implementation state: the authored encounter pair, Key Moments Playback, candidate draft lab, plain-language repair, and Single-Candidate Combat Trial are playable. The current iteration waits only on the owner combat-trial gate.
 - Branch target: `codex/reimagine-core-loop`.
 - Taste comparison prepared: `docs/COMBAT_PRESENTATION_COMPARISON.md` now fixes the shared information hierarchy, encounter-pair question, direction-independent accessibility rules, and timing ranges without choosing the owner-owned presentation identity.
 - Language constraint: plain and mechanical; no bombastic vocabulary.

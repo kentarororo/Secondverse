@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { deriveAftermath, type AftermathFact, type PriorCondition } from "../aftermath";
 import { draftCandidateRoster, type DraftRosterResult } from "../candidates";
+import { simulateCandidateTrial, type CandidateTrialResult } from "../candidateTrial";
 import type { EquipmentId, EquipmentSelectionId } from "../equipment";
 import type { CombatLabSave, SaveReadResult, SaveRepository, SaveWriteResult } from "../save";
 import { createDefaultCombatLabSave } from "../save";
@@ -16,7 +17,13 @@ import type {
   TeamPolicyId,
 } from "../sim";
 
-type Screen = "prepare" | "battle" | "result" | "candidates";
+type Screen =
+  | "prepare"
+  | "battle"
+  | "result"
+  | "candidates"
+  | "candidate_trial_battle"
+  | "candidate_trial_result";
 type PlaybackSpeed = 1 | 1.5 | 2;
 
 export const DEFAULT_PLAN: BattlePlan = {
@@ -71,6 +78,7 @@ interface StudioState {
   readonly candidateSetNumber: number;
   readonly candidateRoster: DraftRosterResult | null;
   readonly favoriteCandidateId: string | null;
+  readonly candidateTrialResult: CandidateTrialResult | null;
   selectHero: (heroId: HeroId) => void;
   moveHero: (heroId: HeroId, toSlot: FormationSlot) => void;
   setTeamPolicy: (policyId: TeamPolicyId) => void;
@@ -100,6 +108,9 @@ interface StudioState {
   returnToPreparation: () => void;
   newCandidateSet: () => void;
   chooseCandidate: (candidateId: string) => void;
+  startCandidateTrial: () => void;
+  showCandidateTrialResult: () => void;
+  returnToCandidateLab: () => void;
   resetLab: () => void;
 }
 
@@ -148,6 +159,7 @@ function initialState() {
     candidateSetNumber: 1,
     candidateRoster: null,
     favoriteCandidateId: null,
+    candidateTrialResult: null,
   };
 }
 
@@ -433,6 +445,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         candidateSetNumber,
         candidateRoster: draftCandidateRoster(candidateCommand(candidateSetNumber)),
         favoriteCandidateId: null,
+        candidateTrialResult: null,
       };
     }),
   chooseCandidate: (candidateId) =>
@@ -444,6 +457,42 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         return state;
       }
       return { favoriteCandidateId: candidateId };
+    }),
+  startCandidateTrial: () =>
+    set((state) => {
+      if (state.candidateRoster?.status !== "ok" || !state.favoriteCandidateId) {
+        return state;
+      }
+      const candidate = state.candidateRoster.candidates.find(
+        (entry) => entry.candidateId === state.favoriteCandidateId,
+      );
+      if (!candidate) return state;
+      const candidateTrialResult = simulateCandidateTrial({
+        type: "start_candidate_trial",
+        version: 1,
+        scenarioId: "three_person_training_v1",
+        battleSeed: `candidate-trial-${state.candidateSetNumber}-${candidate.semanticFingerprint.hash}`,
+        draftCommand: state.candidateRoster.command,
+        candidateId: candidate.candidateId,
+      });
+      return {
+        screen: "candidate_trial_battle",
+        candidateTrialResult,
+        playbackCursor: 0,
+        playing: true,
+        inspectorOpen: false,
+        focusedEventId: null,
+      };
+    }),
+  showCandidateTrialResult: () =>
+    set({ screen: "candidate_trial_result", playing: false, inspectorOpen: false }),
+  returnToCandidateLab: () =>
+    set({
+      screen: "candidates",
+      playbackCursor: 0,
+      playing: true,
+      inspectorOpen: false,
+      focusedEventId: null,
     }),
   resetLab: () => set(initialState()),
 }));

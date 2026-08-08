@@ -48,7 +48,10 @@ function CandidateCard({
   const fingerprint = `${chassis.name} · ${signature.name} · ${loadout.roles.join(" + ")} · ${temperament.name}`;
 
   return (
-    <article className={`candidate-card${selected ? " is-selected" : ""}`}>
+    <article
+      className={`candidate-card${selected ? " is-selected" : ""}`}
+      data-build-id={candidate.semanticFingerprint.hash}
+    >
       <header className="candidate-card-header">
         <div
           className={`candidate-portrait silhouette-${visual.silhouette}`}
@@ -57,9 +60,17 @@ function CandidateCard({
         >
           <span />
         </div>
-        <div>
+        <div className="candidate-title-block">
           <span className="eyebrow">{chassis.name}</span>
           <h2>{candidate.identity.displayName}</h2>
+          <button
+            className={`button ${selected ? "button-secondary" : "button-primary"}`}
+            type="button"
+            aria-pressed={selected}
+            onClick={onSelect}
+          >
+            {selected ? `${candidate.identity.displayName} selected` : `Select ${candidate.identity.displayName}`}
+          </button>
         </div>
       </header>
 
@@ -83,8 +94,8 @@ function CandidateCard({
         </ul>
       </section>
 
-      <section className="candidate-section" aria-label={`${candidate.identity.displayName} draft scores`}>
-        <span className="candidate-section-label">Draft scores</span>
+      <section className="candidate-section" aria-label={`${candidate.identity.displayName} starting stats`}>
+        <span className="candidate-section-label">Starting stats</span>
         <p className="candidate-comparison-note">Compared with the average of this set.</p>
         <dl className="candidate-stats">
           {STAT_IDS.map((statId) => {
@@ -113,27 +124,61 @@ function CandidateCard({
         </div>
       </section>
 
-      <section className="candidate-potential">
-        <span className="candidate-section-label">Potential clue</span>
-        <p>{potential.text}</p>
-        <small>Unknown: exact late growth.</small>
-      </section>
+      <details className="candidate-details">
+        <summary>Candidate details</summary>
+        <div
+          className="candidate-details-content"
+          role="region"
+          aria-label={`${candidate.identity.displayName} candidate details`}
+        >
+          <section className="candidate-potential">
+            <span className="candidate-section-label">Growth clue</span>
+            <p>{potential.text}</p>
+            <small>Exact later growth is still unknown.</small>
+          </section>
 
-      <div className="candidate-fingerprint">
-        <span>Build fingerprint</span>
-        <strong>{fingerprint}</strong>
-        <small>Build ID {candidate.semanticFingerprint.hash}</small>
-      </div>
-
-      <button
-        className={`button ${selected ? "button-secondary" : "button-primary"}`}
-        type="button"
-        aria-pressed={selected}
-        onClick={onSelect}
-      >
-        {selected ? `${candidate.identity.displayName} is your favorite` : `Choose ${candidate.identity.displayName}`}
-      </button>
+          <div className="candidate-fingerprint">
+            <span>Build fingerprint</span>
+            <strong>{fingerprint}</strong>
+            <small>Build ID {candidate.semanticFingerprint.hash}</small>
+          </div>
+        </div>
+      </details>
     </article>
+  );
+}
+
+function SelectedCandidateTray({
+  candidate,
+  onStart,
+}: {
+  readonly candidate: CandidateDraft;
+  readonly onStart: () => void;
+}) {
+  const signature = findById(CANDIDATE_REGISTRY.signatures, candidate.signatureId);
+  const firstTechnique = findById(CANDIDATE_REGISTRY.techniques, candidate.techniqueIds[0]);
+  const secondTechnique = findById(CANDIDATE_REGISTRY.techniques, candidate.techniqueIds[1]);
+
+  return (
+    <section
+      className="candidate-selection-status candidate-selection-tray"
+      role="status"
+      aria-label="Selected fighter"
+    >
+      <div>
+        <span className="eyebrow">Selected for trial</span>
+        <strong>{candidate.identity.displayName}</strong>
+        <span>
+          {signature.name} · {firstTechnique.name} and {secondTechnique.name}
+        </span>
+      </div>
+      <div className="candidate-selection-tray-actions">
+        <p>The trial will use this exact kit. Your current team remains unchanged.</p>
+        <button className="button button-primary" type="button" onClick={onStart}>
+          Start {candidate.identity.displayName}&apos;s trial
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -143,6 +188,7 @@ export function CandidateLabScreen() {
   const favoriteCandidateId = useStudioStore((state) => state.favoriteCandidateId);
   const chooseCandidate = useStudioStore((state) => state.chooseCandidate);
   const newCandidateSet = useStudioStore((state) => state.newCandidateSet);
+  const startCandidateTrial = useStudioStore((state) => state.startCandidateTrial);
 
   if (!roster || roster.status === "generation_failed") {
     return (
@@ -175,7 +221,7 @@ export function CandidateLabScreen() {
       <header className="screen-header candidate-lab-header">
         <div>
           <span className="eyebrow">Candidate trial · Set {candidateSetNumber}</span>
-          <h1 id="candidate-lab-heading">Choose a future recruit</h1>
+          <h1 id="candidate-lab-heading">Choose a fighter to test</h1>
         </div>
         <button className="button button-secondary" type="button" onClick={newCandidateSet}>
           Show new candidates
@@ -183,16 +229,14 @@ export function CandidateLabScreen() {
       </header>
 
       <div className="candidate-scope-note">
-        <strong>Comparison only.</strong>
-        <span>Your choice records a favorite. It does not change the current battle team yet.</span>
+        <strong>Trial selection.</strong>
+        <span>Your selected fighter will enter a real battle trial. Your current three-person team stays unchanged.</span>
       </div>
 
       {favorite ? (
-        <p className="candidate-selection-status" role="status">
-          Favorite recorded: <strong>{favorite.identity.displayName}</strong>. You can change your choice or view a new set.
-        </p>
+        <SelectedCandidateTray candidate={favorite} onStart={startCandidateTrial} />
       ) : (
-        <p className="candidate-selection-status">Compare the trigger, techniques, scores, and risk before choosing.</p>
+        <p className="candidate-selection-status">Compare each fighter&apos;s signature, techniques, starting stats, and risk before selecting one.</p>
       )}
 
       <div className="candidate-grid">

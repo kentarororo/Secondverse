@@ -36,7 +36,14 @@ export function mechanicalRuleKey(rule: MechanicalRule): string {
     : "target" in rule.effect
       ? rule.effect.target
       : "-";
-  return `${rule.trigger.kind}:${triggerValue}>${rule.target}>${rule.effect.kind}:${effectValue}:${rule.oncePerRound ? "once" : "open"}`;
+  const timing = "timing" in rule.effect ? rule.effect.timing : "immediate";
+  return `${rule.trigger.kind}:${triggerValue}>${rule.target}>${rule.effect.kind}:${effectValue}:${timing}:${rule.oncePerRound ? "once" : "open"}`;
+}
+
+function techniqueEffectKey(effect: TechniqueDefinition["effects"][number]): string {
+  const value = "amount" in effect ? effect.amount : "target" in effect ? effect.target : "-";
+  const timing = "timing" in effect ? effect.timing : "immediate";
+  return `${effect.kind}:${value}:${timing}`;
 }
 
 export interface FingerprintInput {
@@ -51,7 +58,7 @@ export interface FingerprintInput {
 
 export function createSemanticFingerprint(input: FingerprintInput): SemanticFingerprint {
   const techniqueKey = input.techniques
-    .map((technique) => `${technique.role}:${technique.cost}:${technique.target}:${technique.effects.map((effect) => `${effect.kind}:${"amount" in effect ? effect.amount : "target" in effect ? effect.target : "-"}`).join("+")}`)
+    .map((technique) => `${technique.role}:${technique.cost}:${technique.target}:${technique.effects.map(techniqueEffectKey).join("+")}`)
     .join("/");
   const dimensions: SemanticDimensions = [
     `${input.chassis.id}:${statsKey(input.chassis.baseStats)}`,

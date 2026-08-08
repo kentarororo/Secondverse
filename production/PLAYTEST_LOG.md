@@ -16,11 +16,11 @@ Automated checks protect correctness; they do not establish fun. Each implemente
 
 ## Sessions
 
-A playable first encounter pair exists. Human sessions: **1/5**. Owner Playtests 01, 02, and 03 used the same owner, so four fresh sessions remain before the prototype gate can pass.
+A playable first encounter pair and comparison-only candidate lab exist. Human sessions: **1/5**. Owner Playtests 01–04 used the same owner, so four fresh sessions remain before the prototype gate can pass.
 
 ## Current verdict
 
-**REVISE — functional but flat.** Owner Playtest 03 gives Key Moments a **KEEP WITH LIMITATION**: pacing is acceptable and the key report or aftermath explanation is sufficient at this stage, but live stance and Bruised notice did not pass and are not claimed solved for fresh players. The same owner ran all three owner sessions, so fresh sessions remain **1/5**. The Phase 2 five-session exit has not passed.
+**REVISE — functional but flat.** Owner Playtest 04 gives the bounded Candidate Draft Lab **KEEP**: semantic comparison, a mechanically reasoned favorite, meaningful risk recognition, and voluntary new-set use passed. Key Moments remains **KEEP WITH LIMITATION**, and candidate combat identity is still untested. The same owner ran all four owner sessions, so fresh sessions remain **1/5**. The Phase 2 five-session exit has not passed.
 
 ## Pre-build independent QA — 2026-08-06
 
@@ -165,9 +165,38 @@ A playable first encounter pair exists. Human sessions: **1/5**. Owner Playtests
 - **Owner questions:** Why does each candidate differ? Which is the favorite and why? Which risk matters? Does the owner voluntarily choose **Show new candidates**?
 - **Gate discipline:** Fresh sessions remain **1/5**. The Phase 2 five-session exit has not passed. Combat integration remains gated, and candidates are not fieldable.
 
+## Owner Playtest 04 — Candidate Draft Lab — 2026-08-08
+
+- **Tester:** Owner; same tester as Owner Playtests 01–03, so fresh human sessions remain **1/5**.
+- **Scope:** Seeded three-candidate comparison, semantic differences, favorite reasoning, risk recognition, and voluntary new-set use. Candidates remained comparison-only and were not fieldable.
+- **Why does each candidate play differently?** "Stats advantage and techniques with variance in numbers makes a good spread right now and sufficient RNG to keep things interesting and as per blueprint finding that jackpot hero that combines the right things together. I can see this scaling up with a large registry of database of all these metrics that can come together to form interesting gameplay."
+- **Which candidate is your favorite, and why?** "One that had stacking attack when technique points after basic attack per round which I assume is turn, and others who had stackng/ramping/easy passives which I suppose we should make rarer"
+- **Which candidate risk matters most?** "lasting statuses like strain after guard on a tank"
+- **Did you choose Show new candidates without feeling prompted?** "of course, that's the whole fun of it to generate non stop till we find that gem of a hero, of course this shouldnt be made available so easy to the player or without resources, we can think about how we should implement that"
+- **Observed gate result:** Semantic variance across stats, advantages, techniques, and numbers passed. The favorite was a basic-attack and technique-point ramping combination. Persistent Strain after Guard was understood as a meaningful risk. Voluntary **Show new candidates** passed.
+- **Human verdict:** **KEEP** for the bounded Candidate Draft Lab.
+- **Economy boundary:** Unlimited new sets are intentionally free only in the lab. Rarity weighting and recruitment cost/resources are deferred until a real run loop defines a source and sink; this playtest does not authorize a standalone currency.
+- **Gate discipline:** The same owner supplied all four owner playtests, so fresh sessions remain **1/5** and the Phase 2 five-session exit has not passed.
+- **Next iteration:** Single-Candidate Combat Trial. The card promises must become executable in the smallest controlled fight before full roster or recruitment integration.
+- **Next human gate:** The owner names at least two candidate rules that activated, connects one to a numerical or status outcome, and says whether they would recruit that candidate.
+
 ## Delivery repair — GitHub Pages path — 2026-08-06
 
 - **Observed problem:** the supplied local project-path URL returned 404, and the repository had no Pages deployment workflow.
 - **Cause:** Vite used a relative base while the delivery guide and browser fixture used `/Secondverse/`; GitHub had no workflow that uploaded `dist` to Pages.
 - **Change:** use `/Secondverse/` for development and production, and deploy the built `dist` artifact through GitHub Pages Actions.
 - **Gate result:** production build passed; the focused Pages-path browser journey passed 1/1; the production preview reports the exact `/Secondverse/` URL.
+
+## Browser gate 8 — Single-Candidate Combat Trial — 2026-08-08
+
+- **Implementation state:** Complete for the bounded controlled trial. One selected generated fighter joins two fixed training partners against three fixed opponents; campaign roster replacement remains excluded.
+- **Automated result:** Strict typecheck and the 172-module production build passed; Vitest passed 115/115; focused candidate-trial Playwright passed 3/3; final full Playwright passed 33/33 in 1.9 minutes.
+- **Generated coverage:** Every one of the 36 core chassis-signature-loadout builds terminated. All 300 candidates from the 100-seed diagnostic sample simulated, covering 12 signatures, 12 advantages, 12 risks, and 18 techniques.
+- **Determinism:** The trial redrafts the referenced roster, rejects candidates outside that provenance, uses named initiative and damage streams, and contains no authoritative `Math.random`.
+- **Presentation evidence:** The chosen fighter appears on a six-unit battlefield with a stable placeholder-art hook, exact flying HP/Guard/Points/Strain/Stored Power changes, live Signature/Advantage/Risk tracking, plain round/action timing, and an exact result report. Full battle details remain closed by default.
+- **QA revision:** The first review found that a highlighted rule could include unrelated routine changes before the next key event. Summaries now follow only typed causal descendants, with regression tests for Measured Combo and Shared Strain.
+- **Independent QA result:** **KEEP; no remaining P0–P3 findings.** Measured Combo displayed only `Points +1`; Shared Strain displayed only the candidate's Strain and its directly caused Broken penalty. At 390×844 the ribbon intersected 0/6 fighter cards, with no horizontal scroll or browser errors.
+- **Iteration result:** **AUTOMATED KEEP — READY FOR OWNER PLAYTEST.** Automation does not establish comprehension or recruitment intent.
+- **Owner gate:** Name at least two candidate rules that activated, connect one rule to a numerical or status outcome, and say whether this candidate would be worth recruiting.
+- **Scope and economy boundary:** Full roster replacement, rarity weighting, recruitment cost, currencies, content expansion, and an art batch remain excluded. Unlimited new sets remain free only in the lab until a run supplies a real source and sink.
+- **Gate discipline:** The same owner remains the only tester, so fresh sessions stay 1/5 and the whole prototype remains REVISE.
