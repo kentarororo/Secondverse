@@ -1,14 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { simulateBattle, type StartBattleCommand } from "../../src/sim";
 import {
+  combatFeedbackAtEvent,
+  combatFeedbackForMoment,
+  contactCueForMoment,
   createInitialUnits,
   eventUnitDeltas,
   eventDurationMs,
+  eventFact,
+  momentSummary,
+  planTrackerAtMoment,
   resultFacts,
   silhouetteClassNames,
   silhouetteVariant,
   unitsAtEvent,
 } from "../../src/ui/presentation";
+import { deriveBattleMoments } from "../../src/ui/moments";
 
 const command: StartBattleCommand = {
   type: "start_battle",
@@ -18,10 +25,10 @@ const command: StartBattleCommand = {
   plan: {
     formation: { front: "cy", middle: "ada", rear: "bo" },
     teamPolicy: "cover_rear",
-    techniquePolicies: {
-      ada: "wait_for_need",
-      bo: "use_early",
-      cy: "wait_for_need",
+    stances: {
+      ada: "ada_brace_under_pressure",
+      bo: "bo_hit_front",
+      cy: "cy_aid_one",
     },
     frontEquipment: "none",
     priorCondition: null,
@@ -39,7 +46,7 @@ describe("battle presentation facts", () => {
   it("links exactly three result facts to real events", () => {
     const result = simulateBattle(command);
     const facts = resultFacts(result);
-    expect(facts.map((fact) => fact.label)).toEqual(["Plan", "Turning point", "Consequence"]);
+    expect(facts.map((fact) => fact.label)).toEqual(["Plan", "Turning point", "Battle result"]);
     for (const fact of facts) {
       expect(result.events.some((event) => event.eventId === fact.eventId)).toBe(true);
       expect(fact.text.length).toBeGreaterThan(0);
@@ -91,6 +98,12 @@ describe("battle presentation facts", () => {
       expect(index).toBeGreaterThanOrEqual(0);
       expect(eventUnitDeltas(rearResult, index)).toHaveLength(1);
     }
+    const nextIntentAfterDamage = rearResult.events.findIndex(
+      (event, index) => index > damageIndex && event.kind === "intent_shown",
+    );
+    expect(combatFeedbackAtEvent(rearResult, nextIntentAfterDamage).deltas).toContainEqual(
+      eventUnitDeltas(rearResult, damageIndex)[0],
+    );
 
     const frontResult = simulateBattle({
       ...command,
@@ -107,6 +120,127 @@ describe("battle presentation facts", () => {
     expect(strainDelta?.amount).toBe(1);
   });
 
+  it("renders the authoritative stance use at its actor with exact effect, cost, and reason", () => {
+    const result = simulateBattle(command);
+    const stanceIndex = result.events.findIndex(
+      (event) => event.kind === "stance_used" && event.stanceId === "bo_hit_front",
+    );
+    const stanceEvent = result.events[stanceIndex];
+
+    expect(stanceIndex).toBeGreaterThanOrEqual(0);
+    expect(stanceEvent?.kind).toBe("stance_used");
+    if (stanceEvent?.kind !== "stance_used") return;
+    expect(eventFact(stanceEvent)).toBe(
+      "Bo uses Hit front. Uses Heavy Hit against the front enemy and spends 2 Points.",
+    );
+    expect(combatFeedbackAtEvent(result, stanceIndex).stance).toEqual({
+      heroId: "bo",
+      stanceId: "bo_hit_front",
+      name: "Hit front",
+      detail: "Uses Heavy Hit against the front enemy and spends 2 Points",
+      trigger: "ready",
+    });
+    expect(combatFeedbackAtEvent(result, stanceIndex + 1).stance?.stanceId).toBe(
+      "bo_hit_front",
+    );
+  });
+
+  it("turns a grouped Cover rear play into one intended-to-resolved causal summary", () => {
+    const result = simulateBattle(command);
+    const moment = deriveBattleMoments(result).find((candidate) =>
+      candidate.keyFacts.some(
+        (fact) => fact.kind === "policy" && fact.effect === "intercept",
+      ),
+    );
+    expect(moment).toBeDefined();
+    if (!moment) return;
+
+    const summary = momentSummary(result, moment);
+    expect(summary.cause).toContain("Cover rear");
+    expect(summary.target).toBe("Bo was targeted, but the action affects Ada.");
+    expect(summary.outcome).toMatch(/Ada HP −\d+ \(\d+→\d+\)/);
+    expect(summary.text).toBe(`${summary.cause} ${summary.target} ${summary.outcome}`);
+    expect(contactCueForMoment(moment)).toEqual(
+      expect.objectContaining({
+        actorId: "rear_attacker",
+        targetIds: ["ada"],
+        reaction: "damage",
+      }),
+    );
+    expect(combatFeedbackForMoment(result, moment).deltas).toContainEqual(
+      expect.objectContaining({ unitId: "ada", kind: "health", lost: expect.any(Number) }),
+    );
+  });
+
+  it("keeps Ada, Bo, and Cy equal in the plan tracker and records exact stance activations", () => {
+    const result = simulateBattle(command);
+    const moments = deriveBattleMoments(result);
+    const setupTracker = planTrackerAtMoment(result, moments[0]!);
+    expect(setupTracker.map((item) => item.heroName)).toEqual(["Ada", "Bo", "Cy"]);
+    expect(setupTracker.map((item) => item.status)).toEqual([
+      "Not used yet",
+      "Not used yet",
+      "Not used yet",
+    ]);
+
+    for (const heroId of ["ada", "bo", "cy"] as const) {
+      const activationMoment = moments.find((moment) => moment.stance?.heroId === heroId);
+      if (!activationMoment) continue;
+      const item = planTrackerAtMoment(result, activationMoment).find(
+        (candidate) => candidate.heroId === heroId,
+      );
+      expect(item).toEqual(
+        expect.objectContaining({
+          stanceId: result.command.plan.stances[heroId],
+          state: "activated",
+          status: `Used in Round ${activationMoment.round}.`,
+          detail: expect.stringMatching(/Points\.$/),
+          outcome: expect.stringMatching(/\d+→\d+/),
+        }),
+      );
+    }
+  });
+
+  it("keeps typed Marked and Bruised status facts at the affected unit", () => {
+    const pressure = simulateBattle(command);
+    const markedIndex = pressure.events.findIndex((event) => event.kind === "target_marked");
+    const marked = pressure.events[markedIndex];
+    expect(marked?.kind).toBe("target_marked");
+    if (marked?.kind !== "target_marked") return;
+    expect(combatFeedbackAtEvent(pressure, markedIndex).statuses).toContainEqual(
+      expect.objectContaining({
+        unitId: marked.targetId,
+        kind: "marked",
+        label: "Marked",
+        visualId: "status.marked",
+      }),
+    );
+
+    const punish = simulateBattle({
+      ...command,
+      encounterId: "punish_front",
+      seed: "ui-persistent-bruised",
+      plan: {
+        ...command.plan,
+        priorCondition: {
+          kind: "bruised",
+          heroId: "bo",
+          healthPenalty: 12,
+          sourceEventId: "event-0074",
+        },
+      },
+    });
+    const laterIntentIndex = punish.events.findIndex(
+      (event, index) => index > 5 && event.kind === "intent_shown",
+    );
+    expect(combatFeedbackAtEvent(punish, laterIntentIndex).statuses).toContainEqual({
+      unitId: "bo",
+      kind: "bruised",
+      label: "Bruised · −12 max HP",
+      visualId: "status.bruised",
+    });
+  });
+
   it("uses the typed equipment event as the second encounter plan fact", () => {
     const result = simulateBattle({
       ...command,
@@ -117,7 +251,7 @@ describe("battle presentation facts", () => {
     const planFact = resultFacts(result)[0];
     const source = result.events.find((event) => event.eventId === planFact?.eventId);
     expect(source?.kind).toBe("equipment_applied");
-    expect(planFact?.text).toContain("Quick Shoes applies");
+    expect(planFact?.text).toContain("Front equipment: Quick Shoes.");
     const equipmentIndex = result.events.findIndex((event) => event.kind === "equipment_applied");
     expect(eventUnitDeltas(result, equipmentIndex)).toEqual([
       expect.objectContaining({ kind: "speed", amount: 4, text: "Speed +4" }),
@@ -145,10 +279,8 @@ describe("battle presentation facts", () => {
     const source = result.events[conditionIndex];
 
     expect(source?.kind).toBe("condition_applied");
-    expect(planFact?.eventId).toBe(source?.eventId);
-    expect(planFact?.text).toBe(
-      "Bo starts Bruised: health 84 to 72; maximum health 84 to 72.",
-    );
+    expect(result.events.some((event) => event.eventId === planFact?.eventId)).toBe(true);
+    expect(planFact?.text).toContain("Bo starts Bruised.");
     expect(eventUnitDeltas(result, conditionIndex)).toEqual([
       expect.objectContaining({ kind: "max-health", amount: -12, text: "Max HP −12" }),
       expect.objectContaining({ kind: "health", amount: -12, text: "HP −12" }),

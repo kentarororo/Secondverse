@@ -14,48 +14,57 @@ test("prepare to readable battle to result to next encounter", async ({ page }) 
   await openFreshLab(page);
 
   await expect(page.getByRole("heading", { level: 1, name: "Pressure the Rear" })).toBeVisible();
-  await expect(page.getByText(/marks that slot before every third action/i)).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Exact events" })).toHaveCount(0);
+  await expect(page.getByText(
+    "Rear Attacker marks the hero in the rear slot before every third action it takes.",
+  )).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Battle details" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/evidence/prepare-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Start battle" }).click();
   await expect(page.getByRole("button", { name: "Skip to result" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Exact events" })).toHaveCount(0);
-  await expect(page.locator(".intent-label")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Battle details" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Current moment" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Key moments" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await page.getByRole("button", { name: "Pause battle" }).click();
   await expect(page.getByRole("button", { name: "Resume battle" })).toBeVisible();
   await page.screenshot({ path: "test-results/evidence/battle-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Resume battle" }).click();
   await page.waitForFunction(() => {
-    const fact = document.querySelector(".battle-fact-strip p");
+    const moment = document.querySelector(".current-moment-card .moment-chain");
     const pause = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.textContent?.trim() === "Pause battle",
     );
-    if (!fact?.textContent?.match(/loses \d+ health/i) || !pause) return false;
+    if (!moment?.getAttribute("aria-label")?.match(/HP [−-]\d+/i) || !pause) return false;
     pause.click();
     return true;
   });
   await expect(page.getByRole("button", { name: "Resume battle" })).toBeVisible();
-  await expect(page.locator(".battle-fact-strip p")).toContainText(/loses \d+ health/i);
-  await expect(page.locator(".intent-card")).toContainText(/Bo to Rear Guard/i);
-  await expect(page.locator(".intent-card")).toContainText(/Basic hit/i);
-  await expect(page.locator(".intent-card")).toContainText(/Contact/i);
+  await expect(page.locator(".current-moment-card .moment-chain")).toHaveAttribute(
+    "aria-label",
+    /Bo.*Basic hit.*Rear Guard.*HP [−-]17/i,
+  );
   await expect(page.locator('[data-unit-id="rear_guard"]')).toContainText(/Target/i);
   await expect(page.locator('[data-unit-id="rear_guard"]')).toContainText(/Hit/i);
-  await expect(page.locator('[data-unit-id="rear_guard"]')).toContainText(/HP [−-]17/i);
+  await expect(page.locator('[data-unit-id="rear_guard"] .unit-delta.delta-primary')).toHaveAttribute(
+    "aria-label",
+    /HP [−-]17/i,
+  );
   await expect(page.locator('[data-unit-id="rear_guard"]')).toHaveAttribute(
     "aria-label",
-    /81 of 98 health.*current change HP [−-]17/i,
+    /HP 81 of 98.*current change: HP [−-]17/i,
   );
   await page.screenshot({ path: "test-results/evidence/battle-impact-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Skip to result" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /^Result:/ })).toBeVisible();
-  await expect(page.getByRole("region", { name: "What changed" })).toContainText("Plan");
-  await expect(page.getByRole("region", { name: "What changed" })).toContainText("Turning point");
-  await expect(page.getByRole("region", { name: "What changed" })).toContainText("Consequence");
-  await expect(page.getByRole("heading", { name: "Exact events" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText("Plan");
+  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText("Turning point");
+  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText("Battle result");
+  await expect(page.getByRole("heading", { name: "Battle details" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/evidence/result-desktop.png", fullPage: true });
 
   await confirmEquipment(page, "Heavy Pad");
@@ -77,34 +86,41 @@ test("formation and team policy produce a visible, traceable result change", asy
 
   await skipBattleToResult(page);
   const baselineFormation = await page.getByRole("region", { name: "Your formation" }).innerText();
-  const baselineOutcome = await page.getByRole("region", { name: "Exact outcome" }).innerText();
+  const baselineOutcome = await page.getByRole("region", { name: "Battle totals" }).innerText();
   await page.getByRole("button", { name: "Change plan and replay" }).click();
 
   await page.getByRole("button", { name: /Ada.*guard.*HP 112/i }).click();
   await page.getByRole("button", { name: "Move to middle" }).click();
   await page.getByRole("radio", { name: /Cover rear/i }).check();
-  await expect(page.getByText(/Current plan: Front Cy; Cover rear/i)).toBeVisible();
+  await expect(page.getByText(/Current plan: Cy starts in the front slot.*Team policy: Cover rear/i)).toBeVisible();
   await page.screenshot({ path: "test-results/evidence/prepare-cover-rear.png", fullPage: true });
 
   await skipBattleToResult(page);
   const changedFormation = await page.getByRole("region", { name: "Your formation" }).innerText();
-  const changedOutcome = await page.getByRole("region", { name: "Exact outcome" }).innerText();
+  const changedOutcome = await page.getByRole("region", { name: "Battle totals" }).innerText();
   expect(changedFormation).not.toBe(baselineFormation);
   expect(changedOutcome).not.toBe(baselineOutcome);
-  await expect(page.getByRole("region", { name: "What changed" })).toContainText(
-    /Cover rear: Ada covers/i,
+  const summary = page.getByRole("region", { name: "Battle summary" });
+  const planFact = summary.locator(".result-fact").filter({
+    has: page.getByRole("heading", { level: 3, name: "Plan" }),
+  });
+  const turningPointFact = summary.locator(".result-fact").filter({
+    has: page.getByRole("heading", { level: 3, name: "Turning point" }),
+  });
+  await expect(planFact.locator("p")).toHaveText(
+    "Cy starts in the front slot. Team policy: Cover rear.",
   );
-  await expect(page.getByRole("region", { name: "What changed" })).toContainText(
-    /Ada intercepts the marked rear hit/i,
+  await expect(turningPointFact.locator("p")).toHaveText(
+    "Turning point: Ada intercepts the marked rear hit.",
   );
 
-  await page.getByRole("button", { name: "Exact events" }).click();
-  await expect(page.getByRole("heading", { name: "Exact events" })).toBeVisible();
-  await expect(page.getByRole("complementary", { name: "Exact events" })).toContainText(
+  await page.getByRole("button", { name: "Battle details" }).click();
+  await expect(page.getByRole("heading", { name: "Battle details" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Battle details" })).toContainText(
     /Cover rear: Ada covers/i,
   );
-  await page.getByRole("button", { name: "Close exact events" }).click();
-  await expect(page.getByRole("heading", { name: "Exact events" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Close battle details" }).click();
+  await expect(page.getByRole("heading", { name: "Battle details" })).toHaveCount(0);
   failures.assertNone();
 });
 
@@ -113,16 +129,19 @@ test("skip and reduced motion preserve the same deterministic outcome", async ({
   await openFreshLab(page);
 
   await skipBattleToResult(page);
-  const normalOutcome = await page.getByRole("region", { name: "Exact outcome" }).innerText();
+  const normalOutcome = await page.getByRole("region", { name: "Battle totals" }).innerText();
   const normalHeroes = await page.getByRole("region", { name: "Your formation" }).innerText();
   const normalEnemies = await page.getByRole("region", { name: "Enemy formation" }).innerText();
 
   await page.getByRole("button", { name: "Change plan and replay" }).click();
   await page.getByRole("checkbox", { name: "Reduced motion" }).check();
   await expect(page.getByRole("checkbox", { name: "Reduced motion" })).toBeChecked();
-  await skipBattleToResult(page);
+  await page.getByRole("button", { name: "Start battle" }).click();
+  await expect(page.locator(".battle-screen")).toHaveClass(/reduce-motion/);
+  await page.getByRole("button", { name: "Skip to result" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: /^Result:/ })).toBeVisible();
 
-  expect(await page.getByRole("region", { name: "Exact outcome" }).innerText()).toBe(normalOutcome);
+  expect(await page.getByRole("region", { name: "Battle totals" }).innerText()).toBe(normalOutcome);
   expect(await page.getByRole("region", { name: "Your formation" }).innerText()).toBe(normalHeroes);
   expect(await page.getByRole("region", { name: "Enemy formation" }).innerText()).toBe(normalEnemies);
   failures.assertNone();
@@ -153,7 +172,9 @@ test("keyboard-only flow reaches battle, result, and encounter two", async ({ pa
   const confirm = page.getByRole("button", { name: "Confirm equipment" });
   await tabTo(page, confirm);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toContainText("Quick Shoes is ready");
+  await expect(page.getByRole("status")).toHaveText(
+    "Quick Shoes are assigned to the front slot.",
+  );
   const next = page.getByRole("button", { name: "Next encounter" });
   await tabTo(page, next);
   await page.keyboard.press("Enter");
@@ -161,19 +182,19 @@ test("keyboard-only flow reaches battle, result, and encounter two", async ({ pa
   failures.assertNone();
 });
 
-test("normal-speed playback reaches its result inside the 45 to 90 second target", async ({ page }) => {
-  test.setTimeout(100_000);
+test("normal-speed key playback reaches its result inside the 35 to 75 second target", async ({ page }) => {
+  test.setTimeout(85_000);
   const failures = collectPageFailures(page);
   await openFreshLab(page);
 
   const startedAt = Date.now();
   await page.getByRole("button", { name: "Start battle" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /^Result:/ })).toBeVisible({
-    timeout: 95_000,
+    timeout: 80_000,
   });
   const durationSeconds = (Date.now() - startedAt) / 1_000;
   console.log(`Normal-speed browser playback: ${durationSeconds.toFixed(1)} seconds`);
-  expect(durationSeconds).toBeGreaterThanOrEqual(45);
-  expect(durationSeconds).toBeLessThanOrEqual(90);
+  expect(durationSeconds).toBeGreaterThanOrEqual(35);
+  expect(durationSeconds).toBeLessThanOrEqual(75);
   failures.assertNone();
 });

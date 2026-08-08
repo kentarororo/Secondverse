@@ -34,7 +34,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         status: "recoverable_error",
         reason: "storage_unavailable",
-        message: "Saved data could not be read. You can continue with a clean laboratory.",
+        message: "Your saved game could not be opened. You can start without it.",
       };
     }
 
@@ -49,7 +49,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         status: "recoverable_error",
         reason: "malformed",
-        message: "Saved data is damaged. Clear it to start clean.",
+        message: "This save is damaged and cannot be used.",
       };
     }
 
@@ -58,7 +58,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         status: "recoverable_error",
         reason: "incompatible",
-        message: "Saved data uses a different version. Clear it to start clean.",
+        message: "This save cannot be used with the current build.",
       };
     }
 
@@ -67,7 +67,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         status: "recoverable_error",
         reason: "malformed",
-        message: "Saved data is incomplete. Clear it to start clean.",
+        message: "This save is incomplete and cannot be used.",
       };
     }
 
@@ -80,7 +80,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         ok: false,
         reason: "invalid_value",
-        message: "The current laboratory state is not valid and was not saved.",
+        message: "Your latest change could not be saved.",
       };
     }
 
@@ -91,7 +91,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         ok: false,
         reason: "storage_unavailable",
-        message: "Saved data could not be written. The current session can continue.",
+        message: "Your latest change could not be saved. You can keep playing, but it may be lost when you close the game.",
       };
     }
   }
@@ -104,7 +104,7 @@ export class LocalStorageSaveRepository<T> implements SaveRepository<T> {
       return {
         ok: false,
         reason: "storage_unavailable",
-        message: "Saved data could not be cleared in this browser.",
+        message: "The saved game could not be deleted in this browser.",
       };
     }
   }

@@ -1,13 +1,13 @@
 # Studio State
 
-**Updated:** 2026-08-06  
+**Updated:** 2026-08-08
 **Phase:** 2 — Combat Laboratory  
-**Repository:** Clean reimplementation on `codex/reimagine-core-loop`; no commits yet  
-**Status:** First encounter pair passes automated gates; waiting on required human playtest
+**Repository:** Branch `codex/reimagine-core-loop`; baseline HEAD/origin `5d34dbc`; current iteration uncommitted.
+**Status:** Seeded Candidate Draft Lab READY FOR OWNER PLAYTEST after automated KEEP; Key Moments KEEP WITH LIMITATION; whole prototype REVISE — functional but flat; fresh sessions remain 1/5
 
 ## Highest-risk unanswered player-experience question
 
-Which 60 seconds of automatic combat should a player want to watch again?
+Will three seeded, mechanically distinct candidates create a reasoned favorite and make the player voluntarily request another roster?
 
 ## Completed iteration — First Encounter Pair Foundation
 
@@ -57,30 +57,68 @@ Which 60 seconds of automatic combat should a player want to watch again?
 - **Evidence:** strict typecheck and production build passed; Vitest 56/56; clean Playwright 19/19 in 94.4 seconds; normal playback 70.2 seconds; desktop, 125% text, reduced motion, and mobile footer geometry passed.
 - **Next highest-risk question:** After the complete two-encounter loop, does the player voluntarily replay with a different plan?
 
-## Current gate — Owner Playtest 01
+## Completed gate — Owner Playtest 01
 
-- **Player problem:** Automated evidence proves the loop is correct and readable in fixtures, but cannot prove that watching it is enjoyable or that the follow-up consequence motivates another attempt.
-- **Falsifiable hypothesis:** If the encounter tell, visible battle causality, equipment choice, and Bruised/no-injury aftermath form a useful loop, the owner will explain the turning point, make a stated counter-plan, and voluntarily want another attempt.
-- **Playable scope:** One clean run through Pressure the Rear, its equipment choice, and Punish the Front, followed by one replay of Pressure the Rear with a changed formation or policy.
-- **Explicit exclusions:** No encounters three and four, generated roster, campaign, additional injuries, narrative content, or polish expansion before the observation is recorded.
-- **Human success criteria:** Owner enjoys normal-speed playback; identifies actor, target, action, and consequence without the inspector; explains the win/loss; changes a plan from the enemy tell; notices and explains Bruised or No injury; chooses to replay without prompting.
-- **Automated protection:** Existing 56 Vitest and 19 Playwright checks remain the regression baseline.
-- **Result:** WAITING FOR HUMAN EVIDENCE
-- **Next highest-risk question:** If the loop earns another attempt, which distinct combat question should encounters three and four test?
+- **Player problem:** Automated evidence proved the loop correct in fixtures but could not establish enjoyment, hero ownership, condition notice, or desire to replay.
+- **Falsifiable hypothesis:** If the encounter tell, visible battle causality, equipment choice, and Bruised/no-injury aftermath formed a useful loop, the owner would explain the turning point, make a stated counter-plan, and voluntarily want another attempt.
+- **Playable scope:** The complete authored encounter pair and its current preparation, equipment, condition, battle, and result surfaces.
+- **Explicit exclusions:** Encounters three and four, generated roster, campaign, additional injuries, narrative content, and final art.
+- **Human success criteria:** Enjoy normal-speed playback; identify battle causality without the inspector; change a plan from the enemy tell; notice Bruised or No injury; choose to replay without prompting.
+- **Automated protection:** 56 Vitest and 19 Playwright checks remained the regression baseline.
+- **Result:** REVISE — functional but flat. The owner wants to keep the autobattler direction and visible plan causality. Visuals were mixed, heroes felt like fixed role pieces, Bruised went unnoticed amid an overwhelming log, and replay desire was unclear.
+- **Next highest-risk question:** Can a small hero-specific preparation choice create ownership before generated recruitment is introduced?
+
+## Completed iteration — Per-hero Stance Ownership
+
+- **Player problem:** Preparation feels like moving fixed tank, damage, and support pieces instead of shaping individual heroes.
+- **Falsifiable hypothesis:** If Ada, Bo, and Cy each have one unique two-option stance with a visible forecast and distinct authoritative battle effects, each hero will feel shaped by the player rather than defined only by a fixed role.
+- **Playable scope:** Per-hero stance controls for Ada, Bo, and Cy; typed stance rules, command fields, events, and forecast facts; save-safe deterministic commands; visible battlefield triggers; less ordinary reliance on the exact-event log; stable placeholder hooks for later character art, animation, number effects, skill effects, debuffs, and statuses.
+- **Explicit exclusions:** Generated roster, recruit or gacha economy, new encounters, final art, campaign, currencies, and broad injury systems.
+- **Human success criteria:** In Owner Playtest 02, the player states all three chosen stances; predicts one concrete effect for each; notices at least two stance triggers without opening the inspector; explains one changed battle outcome; identifies one hero they deliberately shaped; notices Bruised before Punish; and rates both the visuals and desire to replay.
+- **Automated protection:** Strict schema and command validation; deterministic same-command equality; save/reload compatibility; one-variable tests proving each stance changes only its stated rules; typed trigger and forecast facts; browser journeys covering all six options, keyboard input, reduced motion, mobile layout, and exact battlefield/result agreement.
+- **Result:** REVISE at the human gate. The independent automated result remains KEEP, the improved visual direction should stay, and stance mechanics should remain as a foundation. In Owner Playtest 02, only Ada's stance was noticed; changing a stance did not visibly read; healer differentiation was clearest while the other hero identities stayed generic; Bruised was missed again; playback felt too fast and dense; and the owner did not want another attempt.
+- **Next highest-risk question:** Can a small set of paced, causal battle moments make stance effects and Bruised readable without changing the authoritative simulation?
+
+## Completed iteration — Key Moments Playback
+
+- **Player problem:** Authoritative combat is correct, but routine event churn moves too quickly for the player to connect a stance, enemy rule, break, defeat, or Bruised consequence to the outcome.
+- **Falsifiable hypothesis:** If typed causal chains are grouped into a small set of readable plays, routine facts are compressed, and key moments hold longer, the owner will notice stance activations and Bruised and explain one stance-caused outcome without opening the inspector.
+- **Playable scope:** Keep the authoritative battle unchanged; group typed causal chains into a small set of readable plays or highlights; compress routine facts; hold longer for stance, enemy-rule, break, and defeat moments; replace ordinary event churn with a concise moment summary; and make Bruised part of the encounter-two start decision.
+- **Explicit exclusions:** Final sprites, generated candidates, encounters three and four, simulation rebalance, and campaign.
+- **Human success criteria:** without Exact events, owner notices at least 2 of 3 chosen stance activations, explains one stance-caused outcome, notices Bruised before Punish, and rates pacing readable.
+- **Automated protection:** Preserve deterministic authoritative events and results; prove playback grouping does not alter commands or simulation outcomes; cover the typed moment chains, concise summary, Bruised start decision, reduced motion, desktop, and mobile paths.
+- **Result:** KEEP WITH LIMITATION by the owner. Pacing is acceptable and the key report or aftermath explanation is sufficient at this stage, but live stance activation and Bruised notice did not pass and are not claimed solved for fresh players. Automated evidence remains green: typecheck; Vitest 86/86; 151-module production build; Playwright 27/27 in 2.2 minutes; focused Key Moments 3/3; normal playback 39.8 seconds; 28 displayed key moments versus 279 raw events; no P0–P2 source defect or console, page, network, layout, or fallback issue.
+- **Next highest-risk question:** Can seeded candidate comparison create discovery and attachment before any candidate is made fieldable?
+
+## Current iteration — Seeded Candidate Draft Lab
+
+- **Player problem:** The fixed authored trio has no hero discovery, comparison, or attachment choice.
+- **Falsifiable hypothesis:** Three deterministic, compatibility-checked candidates with plain mechanical comparisons will cause the player to make a reasoned choice and voluntarily request another roster.
+- **Playable scope:** A seeded three-candidate comparison; select one favorite; reroll with a new seed; show a mechanical fingerprint; reject duplicates; keep candidates inside the draft lab rather than fielding them; enforce a concise grammar contract; and repair current-loop text concurrently.
+- **Explicit exclusions:** Combat integration, final art, campaign, currencies, broad biographies, arbitrary fragment prose, and encounters three and four.
+- **Human success criteria:** The player states why each candidate differs, chooses one for a mechanical or build reason, identifies one risk or tradeoff, and voluntarily requests another roster.
+- **Automated protection:** Same-seed equality; named RNG streams; runtime schema validation; a 100-seed semantic-diversity and no-duplicate check; browser selection, reroll, keyboard, reduced-motion, desktop, mobile, and text-scale coverage; and grammar assertions.
+- **Implementation result:** Candidate lab and concurrent plain-language repair are complete. Candidates remain comparison-only and cannot enter combat.
+- **Automated evidence:** Focused candidate Playwright passed 3/3; final full Playwright passed 30/30 in 2.2 minutes; normal playback took 39.6 seconds; full Vitest passed 98/98; strict typecheck and the 160-module production build passed; authoritative code contains no `Math.random`.
+- **Seed evidence:** Across 100 deterministic seeds, generation succeeded 100/100 and produced 300 candidates, 298 semantic fingerprints, 36 core builds, minimum semantic distance 3, 93% multi-chassis sets, full required content coverage, and average 1.07 / maximum 2 retries.
+- **QA learning:** Independent QA found a same-set duplicate-name issue. Identity filtering now excludes already-used identity IDs before the identity stream chooses, without tying cosmetic identity to mechanical generation. The focused and full browser gates passed afterward.
+- **Presentation note:** The orphan-period wrap in the mobile favorite status was fixed. Comparing three full mobile cards still requires substantial vertical scrolling; keep this as P2 polish evidence for the owner playtest.
+- **Result:** **IN PROGRESS — READY FOR OWNER PLAYTEST.** Automated verdict: **KEEP**. Do not mark the iteration complete until the human draft gate is observed.
+- **Next highest-risk question:** Can the owner state why each candidate differs, give a reason for a favorite, identify one risk, and voluntarily request a new set?
 
 ## Likely files and systems at risk after approval
 
-- Project scaffold and quality configuration
-- Pure simulation model, seeded RNG streams, commands, and combat events
-- React battle shell and preparation controls
-- CSS battlefield composition, animation timing, and reduced-motion behavior
+- Candidate content schema, compatibility rules, and named RNG streams
+- Deterministic candidate generation, fingerprints, and duplicate rejection
+- Candidate comparison, favorite, and reroll application state
+- Candidate-lab UI, accessibility, responsive layout, and current-loop copy
 - Vitest and Playwright fixtures
 
 ## Session protocol check
 
 - Required files inspected: absent at start; created in this session.
 - Repository and test state inspected: strict app, simulation, save boundary, and browser suite are present and green.
-- Implementation state: two authored encounters, one equipment choice, and one battle-derived condition are playable.
+- Implementation state: the authored two-encounter loop, Key Moments Playback, candidate draft lab, and concurrent plain-language repair are playable; the candidate iteration now waits on its owner playtest.
 - Branch target: `codex/reimagine-core-loop`.
 - Taste comparison prepared: `docs/COMBAT_PRESENTATION_COMPARISON.md` now fixes the shared information hierarchy, encounter-pair question, direction-independent accessibility rules, and timing ranges without choosing the owner-owned presentation identity.
 - Language constraint: plain and mechanical; no bombastic vocabulary.

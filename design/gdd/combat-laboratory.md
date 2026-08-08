@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The first pair tests one question: does a visible change to formation or policy produce a different turning point that the player can explain?
+The first pair tests one question: does a visible change to formation, team policy, equipment, or hero stance produce a different turning point that the player can explain?
 
 Normal actions are deliberate and easy to track. A signature rule or decisive change may use stronger motion and a short pause in the presentation. The simulation remains discrete and round-based underneath that presentation.
 
@@ -12,18 +12,18 @@ The player fields the same three authored heroes and chooses:
 
 - one hero in each of the front, middle, and rear slots;
 - one team policy: **Hold front** or **Cover rear**;
-- one technique policy for each hero: **Use early** or **Wait for need**.
+- one of two named stances for each hero, with the exact trigger, target, cost, and effect shown before battle;
 - one explicit front-slot equipment choice: none, **Heavy Pad**, or **Quick Shoes**.
 
 The player then chooses one of two encounters and starts a seeded battle. The same encounter, seed, and plan always produce the same event sequence and final state.
 
 ## Authored trio
 
-| Hero | Role | Basic action | Technique | Signature rule |
+| Hero | Role | Basic action | Stance choices | Signature rule |
 | --- | --- | --- | --- | --- |
-| Ada | Guard | Hit the nearest living enemy | Brace: add guard to self | Step In: while Cover rear is active, intercept a marked rear strike from the middle slot |
-| Bo | Damage | Hit the nearest living enemy | Heavy Hit: higher damage | Follow Up: Heavy Hit deals extra damage to a target below half health |
-| Cy | Support | Hit the nearest living enemy | First Aid: heal the most injured ally | Quick Help: First Aid adds a small guard when the target is below one-third health |
+| Ada | Guard | Hit the nearest living enemy | **Brace early:** at 2 points, spend 2 for 18 guard. **Brace under pressure:** from 2 points, wait for 60% health or 2 strain; use by 3 points, spend 2 for 26 guard. | Step In: while Cover rear is active, intercept a marked rear strike from the middle slot |
+| Bo | Damage | Hit the nearest living enemy | **Hit front:** at 2 points, spend 2 on Heavy Hit against the nearest living front enemy. **Finish weak:** from 2 points, wait for an enemy below half health; use by 3 points on the lowest health-ratio enemy, spending 2. | Follow Up: Heavy Hit deals extra damage to a target below half health |
+| Cy | Support | Hit the nearest living enemy | **Aid one:** at 2 points, spend 2 to heal the most injured ally for 24. **Aid two:** at 3 points, spend 3 to heal up to two injured allies for 16 each. | Quick Help: First Aid adds a small guard when a target is below one-third health |
 
 These are mechanical test roles, not final character content.
 
@@ -73,16 +73,19 @@ The next battle plan carries either one Bruised condition or `null`. Pressure th
 2. Each living unit acts once per round, ordered by Speed. Equal Speed uses the named `initiative` random stream.
 3. Before an action, the engine emits an intent event with actor, action, target, and visible reason.
 4. Legal actions are `basic`, `brace`, `heavy_hit`, `first_aid`, `rear_mark`, `rear_strike`, and `line_hit`.
-5. Heroes gain one technique point after a basic action, to a maximum of three. A technique costs two.
-6. **Use early** uses a ready technique at two points when it has a legal effect. **Wait for need** uses it only when its authored condition is met, or at three points so it cannot stall forever.
-7. Damage uses one derived path: `max(1, power + action power + variance - max(0, defence - break penalty))`. Guard absorbs damage before health.
-8. Healing cannot exceed maximum health. Guard cannot exceed the unit's authored guard cap.
-9. The battle ends when all units on one side are defeated, or at the action cap. The action-cap winner is the side with the higher remaining-health ratio; an exact tie is a draw.
-10. Random damage variance comes only from the named `damage` stream. No authoritative system uses `Math.random`.
+5. Heroes gain one technique point after a basic action, to a maximum of three. Each stance states whether its technique spends two or three points.
+6. A stance controls only its named hero's technique. Conditional stances wait at two points and use at three if their condition has not happened. Cy cannot use either aid stance when no living ally is injured.
+7. The most injured ally and weakest enemy use health ratio first, formation slot second (front, middle, rear), and unit ID third. This makes every tie deterministic.
+8. Damage uses one derived path: `max(1, power + action power + variance - max(0, defence - break penalty))`. Guard absorbs damage before health.
+9. Healing cannot exceed maximum health. Guard cannot exceed the unit's authored guard cap.
+10. The battle ends when all units on one side are defeated, or at the action cap. The action-cap winner is the side with the higher remaining-health ratio; an exact tie is a draw.
+11. Random damage variance comes only from the named `damage` stream. No authoritative system uses `Math.random`.
 
 ## Exact event contract
 
 Every state change is a discriminated, serializable event. An event that changes health, guard, technique points, target, strain, or defeat state includes `causedByEventId`, linking it to the action or rule that caused it. Damage events include raw amount, defence, guard absorbed, and final health loss. The presentation may change timing but may not create combat facts.
+
+Every hero technique emits `intent_shown`, then `stance_used`, then `action_started`. `stance_used` links to the intent and records the hero, stance, action, final target list, point cost, and effect kind. `action_started` links to the stance event. Basic and enemy actions keep their direct intent-to-action link. The presentation must use these facts rather than infer a stance from an action name.
 
 Equipment uses the same derived-stat function as every unit. An `equipment_applied` event records base Speed, modifier, final Speed, and starting guard. Any resulting guard change links back to that event.
 
@@ -94,6 +97,8 @@ Bruised also uses the canonical derived-stat function. It changes no Power, Defe
 - Ada can intercept only while alive, assigned to middle, and not already the marked target.
 - A unit defeated by a break hit does not act later in the round.
 - Healing is not legal when every living ally is at full health; Cy uses a basic action instead.
+- Aid two heals one ally when only one is injured, heals two when two or more are injured, and spends its three points once per action.
+- Finish weak chooses only living enemies. Equal health ratios resolve by front-to-rear slot and then unit ID.
 - Guard is removed before health and never becomes negative.
 - Equipment applies to the current front slot once at battle start and never follows a hero after the command is created.
 - Bruised applies only in Punish the Front, only to its named hero, and only once at setup.
@@ -108,7 +113,12 @@ All values live in `src/content/tuning.ts`.
 | Action cap | 72 | 48-90 |
 | Basic action power | 4 | 2-7 |
 | Damage variance | -1 to 2 | -2 to 3 |
-| Technique cost | 2 | 2-3 |
+| Ada: Brace early guard / cost | 18 / 2 | 14-22 / 2 |
+| Ada: Brace under pressure guard / cost | 26 / 2 | 22-30 / 2 |
+| Ada pressure health / strain / forced points | 60% / 2 / 3 | 50-70% / 1-2 / 3 |
+| Bo stance cost / weak-health trigger / forced points | 2 / below 50% / 3 | 2 / 40-60% / 3 |
+| Cy: Aid one heal / cost | 24 / 2 | 18-28 / 2 |
+| Cy: Aid two heal per target / cost | 16 / 3 | 12-20 / 3 |
 | Rear strike power | 40 | 30-44 |
 | Break threshold | 3 | 2-4 |
 | Break bonus damage | 8 | 5-12 |
@@ -136,7 +146,10 @@ Version-one saves created before the condition field existed remain valid and lo
 - Identical command input produces byte-for-byte equal results.
 - Reordering only formation changes targets and at least one decisive event in each encounter.
 - Changing only team policy changes mitigation or interception while all other inputs remain fixed.
-- Changing only a hero technique policy changes that hero's selected action timing.
+- Changing only Ada's stance changes Brace timing and guard amount.
+- Changing only Bo's stance changes Heavy Hit timing or target while Follow Up still applies below half health.
+- Changing only Cy's stance changes First Aid cost, amount, or target count.
+- Every technique has a valid intent-to-stance-to-action causal chain with the exact stance, target list, cost, and effect.
 - Changing only front equipment changes first-round order or mitigation against Punish the Front.
 - Heavy Pad and Quick Shoes effects are visible in canonical equipment and guard events.
 - The default Pressure plan Bruises its actual first defeated hero; the stronger Cover plan produces No injury while it keeps every hero standing.

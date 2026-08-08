@@ -3,7 +3,9 @@ import {
   AUTHORED_TRIO,
   ENCOUNTERS,
   ENEMIES,
+  STANCES,
   parseHeroBlueprint,
+  parseStanceDefinition,
   parseStartBattleCommand,
 } from "../../src/content";
 import { command } from "./fixtures";
@@ -13,6 +15,7 @@ describe("runtime content validation", () => {
     expect(AUTHORED_TRIO).toHaveLength(3);
     expect(Object.keys(ENCOUNTERS)).toEqual(["pressure_rear", "punish_front"]);
     expect(Object.keys(ENEMIES)).toHaveLength(6);
+    expect(Object.keys(STANCES)).toHaveLength(6);
   });
 
   it("rejects an invalid formation", () => {
@@ -36,6 +39,27 @@ describe("runtime content validation", () => {
     const invalidPlan = invalidEquipment.plan as Record<string, unknown>;
     invalidPlan.frontEquipment = "mystery_item";
     expect(() => parseStartBattleCommand(invalidEquipment)).toThrow();
+  });
+
+  it("requires one owned stance choice for each hero", () => {
+    const missingStances = structuredClone(command()) as unknown as Record<string, unknown>;
+    const missingPlan = missingStances.plan as Record<string, unknown>;
+    delete missingPlan.stances;
+    expect(() => parseStartBattleCommand(missingStances)).toThrow();
+
+    const crossHero = structuredClone(command()) as unknown as Record<string, unknown>;
+    const crossHeroPlan = crossHero.plan as { stances: Record<string, unknown> };
+    crossHeroPlan.stances.ada = "bo_hit_front";
+    expect(() => parseStartBattleCommand(crossHero)).toThrow();
+  });
+
+  it("rejects a stance definition whose ID belongs to another hero", () => {
+    expect(() =>
+      parseStanceDefinition({
+        ...STANCES.ada_brace_early,
+        heroId: "bo",
+      }),
+    ).toThrow(/owner does not match/i);
   });
 
   it("requires a nullable prior condition and validates its exact penalty", () => {

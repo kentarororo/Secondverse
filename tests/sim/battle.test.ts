@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { COMBAT_TUNING } from "../../src/content";
 import {
+  ADA_STANCE_IDS,
+  BO_STANCE_IDS,
+  CY_STANCE_IDS,
   FORMATION_SLOTS,
   HERO_IDS,
   TEAM_POLICY_IDS,
-  TECHNIQUE_POLICY_IDS,
   simulateBattle,
   type BattleEvent,
   type BattleFormation,
   type EncounterId,
-  type HeroId,
-  type TechniquePolicyId,
+  type HeroStances,
 } from "../../src/sim";
 import { ADA_FRONT, ADA_REAR, command } from "./fixtures";
 
@@ -65,12 +66,12 @@ describe("deterministic combat", () => {
       { front: "cy", middle: "bo", rear: "ada" },
     ];
     const encounters: EncounterId[] = ["pressure_rear", "punish_front"];
-    const policySets: Array<Readonly<Record<HeroId, TechniquePolicyId>>> = [];
+    const stanceSets: HeroStances[] = [];
 
-    for (const ada of TECHNIQUE_POLICY_IDS) {
-      for (const bo of TECHNIQUE_POLICY_IDS) {
-        for (const cy of TECHNIQUE_POLICY_IDS) {
-          policySets.push({ ada, bo, cy });
+    for (const ada of ADA_STANCE_IDS) {
+      for (const bo of BO_STANCE_IDS) {
+        for (const cy of CY_STANCE_IDS) {
+          stanceSets.push({ ada, bo, cy });
         }
       }
     }
@@ -78,7 +79,7 @@ describe("deterministic combat", () => {
     for (const encounterId of encounters) {
       for (const formation of formations) {
         for (const teamPolicy of TEAM_POLICY_IDS) {
-          for (const techniquePolicies of policySets) {
+          for (const stances of stanceSets) {
             const result = simulateBattle({
               type: "start_battle",
               version: 1,
@@ -87,7 +88,7 @@ describe("deterministic combat", () => {
               plan: {
                 formation,
                 teamPolicy,
-                techniquePolicies,
+                stances,
                 frontEquipment: "none",
                 priorCondition: null,
               },
@@ -185,16 +186,20 @@ describe("planning leverage", () => {
       .toBe(true);
   });
 
-  it("changes technique timing when only one hero policy changes", () => {
+  it("changes technique timing when only one hero stance changes", () => {
     const safeAda: BattleFormation = { front: "bo", middle: "ada", rear: "cy" };
     const early = simulateBattle(
-      command({ formation: safeAda, teamPolicy: "hold_front", techniqueOverrides: { ada: "use_early" } }),
+      command({
+        formation: safeAda,
+        teamPolicy: "hold_front",
+        stanceOverrides: { ada: "ada_brace_early" },
+      }),
     );
     const wait = simulateBattle(
       command({
         formation: safeAda,
         teamPolicy: "hold_front",
-        techniqueOverrides: { ada: "wait_for_need" },
+        stanceOverrides: { ada: "ada_brace_under_pressure" },
       }),
     );
     const braceSequence = (events: readonly BattleEvent[]): number | null =>

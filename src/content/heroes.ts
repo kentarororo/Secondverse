@@ -10,6 +10,7 @@ const heroInputs = [
     technique: "brace",
     techniqueName: "Brace",
     signatureName: "Step In",
+    stanceIds: ["ada_brace_early", "ada_brace_under_pressure"],
   },
   {
     id: "bo",
@@ -19,6 +20,7 @@ const heroInputs = [
     technique: "heavy_hit",
     techniqueName: "Heavy Hit",
     signatureName: "Follow Up",
+    stanceIds: ["bo_hit_front", "bo_finish_weak"],
   },
   {
     id: "cy",
@@ -28,6 +30,7 @@ const heroInputs = [
     technique: "first_aid",
     techniqueName: "First Aid",
     signatureName: "Quick Help",
+    stanceIds: ["cy_aid_one", "cy_aid_two"],
   },
 ] as const;
 

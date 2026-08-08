@@ -1,6 +1,11 @@
-import type { UnitId, UnitSnapshot } from "../sim";
+import type { ActionId, UnitId, UnitSnapshot } from "../sim";
 import { UnitCard } from "./UnitCard";
-import type { ReactionKind, UnitDelta } from "./presentation";
+import type {
+  ReactionKind,
+  StanceRibbon,
+  UnitDelta,
+  UnitStatusCue,
+} from "./presentation";
 
 interface BattlefieldProps {
   readonly units: readonly UnitSnapshot[];
@@ -10,6 +15,10 @@ interface BattlefieldProps {
   readonly deltas?: readonly UnitDelta[];
   readonly reactionTargetIds?: readonly UnitId[];
   readonly reaction?: ReactionKind;
+  readonly statusCues?: readonly UnitStatusCue[];
+  readonly stanceRibbon?: StanceRibbon | null;
+  readonly actionId?: ActionId;
+  readonly feedbackKey?: string;
 }
 
 const slotRank = { front: 0, middle: 1, rear: 2 } as const;
@@ -22,6 +31,10 @@ export function Battlefield({
   deltas = [],
   reactionTargetIds = [],
   reaction,
+  statusCues = [],
+  stanceRibbon,
+  actionId,
+  feedbackKey,
 }: BattlefieldProps) {
   const ordered = (side: "heroes" | "enemies") =>
     units
@@ -41,6 +54,10 @@ export function Battlefield({
               targeted={targetIds.includes(unit.id)}
               final={final}
               deltas={deltas.filter((delta) => delta.unitId === unit.id)}
+              statusCues={statusCues.filter((status) => status.unitId === unit.id)}
+              {...(feedbackKey ? { feedbackKey } : {})}
+              {...(stanceRibbon?.heroId === unit.id ? { stanceRibbon } : {})}
+              {...(actionId && actorId === unit.id ? { actionId } : {})}
               {...(reaction && reactionTargetIds.includes(unit.id) ? { reaction } : {})}
             />
           ))}
@@ -62,6 +79,10 @@ export function Battlefield({
               targeted={targetIds.includes(unit.id)}
               final={final}
               deltas={deltas.filter((delta) => delta.unitId === unit.id)}
+              statusCues={statusCues.filter((status) => status.unitId === unit.id)}
+              {...(feedbackKey ? { feedbackKey } : {})}
+              {...(stanceRibbon?.heroId === unit.id ? { stanceRibbon } : {})}
+              {...(actionId && actorId === unit.id ? { actionId } : {})}
               {...(reaction && reactionTargetIds.includes(unit.id) ? { reaction } : {})}
             />
           ))}

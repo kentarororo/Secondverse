@@ -59,14 +59,22 @@ This is a product requirement, not a claim of formal certification. Automated ch
 
 ## 2. Combat-specific rules
 
+- **Key moments** is selected by default. **Every action** is a two-state button group; both modes use grouped setup/action/outcome moments and never expose raw calculations as ordinary playback steps.
+- The current moment is a single semantic region that names cause, intended and resolved targets when they differ, and exact aggregate consequences. Visual arrows are hidden from assistive technology; the accessible label reads the same chain once.
+- Key-moment progress names the current displayed moment and total. If routine actions were compressed, visible text states how many were advanced.
+- A persistent **Plan tracker** is a three-item list. Ada, Bo, and Cy always remain present in the same hierarchy with selected stance name and authoritative **Ready**, **Not used yet**, or latest activation round. Activated entries include exact effect, cost, and relevant result.
 - Actor and target use distinct outline shapes and visible labels **Acting** and **Target**; team side is also spoken and labeled.
 - Enemy rules remain text-visible during preparation and battle.
 - Intent is displayed before counterable impact for at least the specified readable duration.
 - Floating values are duplicated in persistent meters/text and in the exact event fact.
+- Health deltas use a large signed value plus a visible `HP` label. Secondary changes remain signed and named rather than relying on color or animation.
+- A stance-use ribbon names the hero's selected stance, supplied effect, point cost, and whether it was ready, condition-triggered, or forced at the point cap.
+- Bruised, Marked, Broken, and Defeated remain visible as text at the affected unit for their useful authoritative window. Mobile may hide duplicate resource chips, but not these status cues.
 - A maximum of three statuses appears on the battlefield; an accessible `+N` control exposes the full list.
 - A signature callout includes hero name and plain rule text.
 - The decisive event includes **Turning point** text. Extra motion or sound is supplementary.
 - Pause leaves current facts on screen. Speed changes do not shorten semantic live-region text; announcements queue or summarize rather than overlap.
+- Reduced motion removes movement but preserves the same grouped cause, target, outcome, Plan tracker, and progress facts. Each displayed moment has at least 1.5 seconds reading time at 1x.
 - **Skip to result** is keyboard, mouse, and touch operable, moves focus to the result heading, and preserves access to all exact events and result facts.
 
 ## 3. Preparation-specific rules
@@ -74,8 +82,10 @@ This is a product requirement, not a claim of formal certification. Automated ch
 - Formation slots are named front, middle, and rear in visible and accessible text.
 - Reordering by keyboard and touch does not depend on spatial direction words.
 - After reorder, focus stays with the hero and a polite announcement confirms the new slot.
-- Policy selectors use radio-group semantics and show concrete effects without requiring hover.
+- Team policy and hero stance selectors use separate radio-group semantics and show concrete effects without requiring hover.
+- Every hero card names its selected stance. Selecting a hero exposes exactly its two validated stance options; the accessible names include the complete forecast.
 - The current complete plan is summarized before **Start battle**.
+- When Punish starts with Bruised, a prominent condition region and footer reminder name the hero and exact maximum-health loss. The primary button text and accessible name are `Start with {Hero} Bruised · −{amount} max HP`. With no injury, it remains **Start battle**.
 - If preparation is invalid, the error points to the affected control and gives one recovery action.
 
 ## 4. Result and reward rules

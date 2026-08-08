@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ENCOUNTERS } from "../content";
+import { ENCOUNTERS, HEROES } from "../content";
 import { getEquipmentRewardOptions } from "../equipment";
 import { useCombatLabRepository } from "../state/repositoryContext";
 import { useStudioStore } from "../state/studioStore";
@@ -12,6 +12,10 @@ function outcomeCopy(winner: "heroes" | "enemies" | "draw"): string {
   if (winner === "heroes") return "Win";
   if (winner === "enemies") return "Loss";
   return "Draw";
+}
+
+function signedChange(value: number): string {
+  return `${value >= 0 ? "+" : "−"}${Math.abs(value)}`;
 }
 
 export function ResultScreen() {
@@ -35,8 +39,11 @@ export function ResultScreen() {
   if (!result) {
     return (
       <section className="screen recovery-screen">
-        <h1>Result unavailable</h1>
-        <p>No validated battle result was supplied.</p>
+        <h1>Result could not be loaded</h1>
+        <p>Return to preparation and start the battle again.</p>
+        <button className="button button-primary" type="button" onClick={replayToPrepare}>
+          Return to preparation
+        </button>
       </section>
     );
   }
@@ -63,16 +70,16 @@ export function ResultScreen() {
 
       <div className="result-grid">
         <Battlefield units={result.finalUnits} final />
-        <section className="result-facts" aria-labelledby="what-changed-heading">
-          <span className="eyebrow">Battle explanation</span>
-          <h2 id="what-changed-heading">What changed</h2>
+        <section className="result-facts" aria-labelledby="battle-summary-heading">
+          <span className="eyebrow">Why it happened</span>
+          <h2 id="battle-summary-heading">Battle summary</h2>
           <div className="fact-list">
             {facts.map((fact) => (
               <article className="result-fact" key={fact.label}>
                 <h3>{fact.label}</h3>
                 <p>{fact.text}</p>
                 <button className="text-button" type="button" onClick={() => openInspector(fact.eventId)}>
-                  Show exact event
+                  Show battle detail
                 </button>
               </article>
             ))}
@@ -80,9 +87,9 @@ export function ResultScreen() {
         </section>
       </div>
 
-      <section className="result-summary" aria-label="Exact outcome">
+      <section className="result-summary" aria-label="Battle totals">
         <span>
-          {result.rounds} rounds · {result.actionCount} actions · Seed {result.command.seed}
+          {result.rounds} rounds · {result.actionCount} actions
         </span>
         <button className="button button-quiet" type="button" onClick={() => openInspector()}>
           {UI_COPY.exactEvents}
@@ -97,7 +104,7 @@ export function ResultScreen() {
           </div>
           {aftermathFact.kind === "bruised" ? (
             <p>
-              <strong>{unitName(aftermathFact.heroId)}: Bruised.</strong> This hero was knocked out. Next battle maximum health −{aftermathFact.healthPenalty}.
+              <strong>{unitName(aftermathFact.heroId)} is Bruised.</strong> This hero was knocked out and starts the next battle with Max HP reduced from {HEROES[aftermathFact.heroId].stats.maxHealth} to {HEROES[aftermathFact.heroId].stats.maxHealth - aftermathFact.healthPenalty}.
             </p>
           ) : (
             <p>
@@ -109,7 +116,7 @@ export function ResultScreen() {
             type="button"
             onClick={() => openInspector(aftermathFact.sourceEventId)}
           >
-            Show source event
+            Show knockout detail
           </button>
         </section>
       ) : null}
@@ -119,9 +126,9 @@ export function ResultScreen() {
           <div className="reward-heading-row">
             <div>
               <span className="eyebrow">Equipment reward</span>
-              <h2 id="equipment-reward-heading">Choose front equipment</h2>
+              <h2 id="equipment-reward-heading">Choose equipment for the front slot</h2>
             </div>
-            <p>It applies to whoever starts the next battle in front.</p>
+            <p>The item belongs to the front slot and applies to the hero who starts there.</p>
           </div>
           <fieldset className="reward-options" disabled={equipmentConfirmed}>
             <legend className="sr-only">Front equipment options</legend>
@@ -142,7 +149,7 @@ export function ResultScreen() {
                   <strong>{equipment.name}</strong>
                   <span>{equipment.description}</span>
                   <span className="equipment-exacts">
-                    Starting guard +{equipment.effects.startingGuard} · Speed {equipment.effects.speed >= 0 ? "+" : ""}{equipment.effects.speed}
+                    At battle start: Guard +{equipment.effects.startingGuard}; Speed {signedChange(equipment.effects.speed)}.
                   </span>
                   {(equipmentConfirmed ? selectedEquipment : rewardSelection) === equipment.id ? (
                     <span className="selected-label">Selected</span>
@@ -164,7 +171,9 @@ export function ResultScreen() {
             </button>
             {equipmentConfirmed ? (
               <p className="confirmation-copy" role="status">
-                {selectedEquipment === "heavy_pad" ? "Heavy Pad" : "Quick Shoes"} is ready for the front slot.
+                {selectedEquipment === "heavy_pad"
+                  ? "Heavy Pad is assigned to the front slot."
+                  : "Quick Shoes are assigned to the front slot."}
               </p>
             ) : (
               <p id="next-encounter-reason" className="next-reason">

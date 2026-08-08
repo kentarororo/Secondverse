@@ -1,23 +1,25 @@
-import type { ActionId, TeamPolicyId, TechniquePolicyId } from "../sim";
+import type { ActionId, TeamPolicyId } from "../sim";
 
 export const UI_COPY = {
   appName: "Anotherverse combat lab",
   enemyRule: "Enemy rule",
   formation: "Formation",
   teamPolicy: "Team policy",
-  techniquePolicy: "Technique policy",
+  stance: "Stance",
   resetPlan: "Reset plan",
   startBattle: "Start battle",
   pauseBattle: "Pause battle",
   resumeBattle: "Resume battle",
   skipResult: "Skip to result",
-  exactEvents: "Exact events",
-  closeExactEvents: "Close exact events",
+  exactEvents: "Battle details",
+  keyMoments: "Key moments",
+  everyAction: "Every action",
+  closeExactEvents: "Close battle details",
   reducedMotion: "Reduced motion",
   result: "Result",
   plan: "Plan",
   turningPoint: "Turning point",
-  consequence: "Consequence",
+  consequence: "Battle result",
   replay: "Change plan and replay",
   nextEncounter: "Next encounter",
   firstEncounter: "Return to first encounter",
@@ -26,8 +28,8 @@ export const UI_COPY = {
 export const ACTION_NAMES: Readonly<Record<ActionId, string>> = {
   basic: "Basic hit",
   brace: "Brace",
-  heavy_hit: "Heavy hit",
-  first_aid: "First aid",
+  heavy_hit: "Heavy Hit",
+  first_aid: "First Aid",
   rear_strike: "Marked rear hit",
   line_hit: "Front pressure hit",
 };
@@ -37,23 +39,10 @@ export const TEAM_POLICY_COPY: Readonly<
 > = {
   hold_front: {
     name: "Hold front",
-    effect: "The front hero starts with 18 guard.",
+    effect: "The hero in the front slot starts with 18 Guard.",
   },
   cover_rear: {
     name: "Cover rear",
-    effect: "Ada intercepts a marked rear hit while she is alive in middle.",
-  },
-};
-
-export const TECHNIQUE_POLICY_COPY: Readonly<
-  Record<TechniquePolicyId, { readonly name: string; readonly effect: string }>
-> = {
-  use_early: {
-    name: "Use early",
-    effect: "Use the technique when 2 points are ready.",
-  },
-  wait_for_need: {
-    name: "Wait for need",
-    effect: "Wait for its useful condition, then use by 3 points.",
+    effect: "Ada intercepts the marked rear attack while she is alive in the middle slot.",
   },
 };

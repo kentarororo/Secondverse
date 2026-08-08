@@ -42,20 +42,25 @@ export async function openFreshLab(page: Page, path = "./"): Promise<void> {
 }
 
 export async function skipBattleToResult(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "Start battle" }).click();
+  await page.getByRole("button", {
+    name: /^Start (?:battle|with .+ Bruised · −\d+ max HP)$/,
+  }).click();
   await expect(page.getByRole("button", { name: "Skip to result" })).toBeVisible();
   await page.getByRole("button", { name: "Skip to result" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /^Result:/ })).toBeVisible();
 }
 
 export async function confirmEquipment(page: Page, name: EquipmentName): Promise<void> {
-  const reward = page.getByRole("region", { name: "Choose front equipment" });
+  const reward = page.getByRole("region", { name: "Choose equipment for the front slot" });
   await expect(reward).toBeVisible();
   await page.getByRole("radio", { name: new RegExp(name, "i") }).check();
   const confirm = page.getByRole("button", { name: "Confirm equipment" });
   await expect(confirm).toBeEnabled();
   await confirm.click();
-  await expect(page.getByRole("status")).toContainText(`${name} is ready for the front slot.`);
+  const confirmation = name === "Heavy Pad"
+    ? "Heavy Pad is assigned to the front slot."
+    : "Quick Shoes are assigned to the front slot.";
+  await expect(page.getByRole("status")).toHaveText(confirmation);
   await expect(page.getByRole("button", { name: "Next encounter" })).toBeEnabled();
 }
 

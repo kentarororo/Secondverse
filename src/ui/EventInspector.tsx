@@ -49,14 +49,14 @@ export function EventInspector({ result, currentEventId }: EventInspectorProps) 
     <aside className="event-inspector" aria-labelledby="event-inspector-heading">
       <header className="inspector-header">
         <div>
-          <span className="eyebrow">Replay facts</span>
+          <span className="eyebrow">Full battle</span>
           <h2 id="event-inspector-heading">{UI_COPY.exactEvents}</h2>
         </div>
         <button ref={closeButtonRef} className="button button-quiet" type="button" onClick={close}>
           {UI_COPY.closeExactEvents}
         </button>
       </header>
-      <p className="inspector-note">These facts come from the saved battle result.</p>
+      <p className="inspector-note">Every action and number below comes from this battle.</p>
       <ol className="event-list">
         {result.events.map((event) => {
           const current = event.eventId === currentEventId;
@@ -69,7 +69,7 @@ export function EventInspector({ result, currentEventId }: EventInspectorProps) 
               aria-current={current ? "step" : undefined}
             >
               <div className="event-meta">
-                <span>Event {event.sequence + 1}</span>
+                <span>Detail {event.sequence + 1}</span>
                 <span>Round {event.round}</span>
                 <code>{event.eventId}</code>
               </div>

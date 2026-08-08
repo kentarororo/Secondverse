@@ -13,7 +13,7 @@ export function SaveNotice() {
     return (
       <section className="save-notice save-recovery" role="alert" aria-labelledby="save-recovery-heading">
         <div>
-          <h2 id="save-recovery-heading">Saved data needs attention</h2>
+          <h2 id="save-recovery-heading">Saved game unavailable</h2>
           <p>{recoveryMessage}</p>
         </div>
         <div className="save-notice-actions">
@@ -25,10 +25,10 @@ export function SaveNotice() {
               if (repository) clearSavedData(repository);
             }}
           >
-            Clear saved data
+            Delete saved data
           </button>
           <button className="button button-primary" type="button" onClick={continueClean}>
-            Continue clean
+            Start without saved data
           </button>
         </div>
       </section>
@@ -38,7 +38,7 @@ export function SaveNotice() {
   if (!saveNotice) return null;
 
   return (
-    <section className="save-notice save-warning" role="status" aria-label="Save notice">
+    <section className="save-notice save-warning" role="status" aria-label="Save warning">
       <p>{saveNotice}</p>
       <button className="button button-quiet" type="button" onClick={dismissSaveNotice}>
         Dismiss

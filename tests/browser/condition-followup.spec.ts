@@ -12,11 +12,11 @@ import {
 test.use({ viewport: { width: 1365, height: 768 } });
 
 const BRUISED_RESULT_COPY =
-  "Bo: Bruised. This hero was knocked out. Next battle maximum health −12.";
+  "Bo is Bruised. This hero was knocked out and starts the next battle with Max HP reduced from 84 to 72.";
 const BRUISED_PREP_COPY =
-  "Next battle HP 72/72. Maximum health −12 from 84.";
-const BRUISED_PLAN_FACT =
-  "Bo starts Bruised: health 84 to 72; maximum health 84 to 72.";
+  "Bo starts this battle at 72/72 HP. Bruised reduces Max HP from 84 to 72.";
+const BRUISED_EVENT_FACT =
+  "Bo starts Bruised. HP 84 to 72; Max HP 84 to 72.";
 
 async function seedStoredValue(page: Page, value: object): Promise<void> {
   await page.goto("./", { waitUntil: "domcontentloaded" });
@@ -42,12 +42,12 @@ test("default Pressure aftermath links Bo's Bruised condition to the defeating e
     fullPage: true,
   });
 
-  const sourceButton = aftermath.getByRole("button", { name: "Show source event" });
+  const sourceButton = aftermath.getByRole("button", { name: "Show knockout detail" });
   await sourceButton.click();
-  const inspector = page.getByRole("complementary", { name: "Exact events" });
+  const inspector = page.getByRole("complementary", { name: "Battle details" });
   await expect(inspector).toBeVisible();
   const focusedSource = inspector.locator("li.is-focused");
-  await expect(focusedSource).toContainText("event-0073");
+  await expect(focusedSource.locator("code")).toHaveText(/^event-\d{4}$/);
   await expect(focusedSource).toContainText("Rear Attacker defeats Bo.");
   await page.keyboard.press("Escape");
   await expect(inspector).toHaveCount(0);
@@ -69,8 +69,12 @@ test("confirmed equipment and Bruised persist into Punish and produce an authori
   const priorCondition = page.getByRole("region", { name: "Prior condition" });
   await expect(priorCondition).toContainText("Bo: Bruised");
   await expect(priorCondition).toContainText(BRUISED_PREP_COPY);
+  const bruisedStart = page.getByRole("button", {
+    name: "Start with Bo Bruised · −12 max HP",
+  });
+  await expect(bruisedStart).toBeVisible();
   await expect(page.getByRole("button", { name: /rear Bo/i })).toContainText(
-    "Bruised: HP 72/72, Max HP −12",
+    "Bruised: HP 72/72; Max HP −12",
   );
   const save = await page.evaluate((key) => window.localStorage.getItem(key), COMBAT_LAB_SAVE_KEY);
   expect(save).not.toBeNull();
@@ -80,7 +84,7 @@ test("confirmed equipment and Bruised persist into Punish and produce an authori
       kind: "bruised",
       heroId: "bo",
       healthPenalty: 12,
-      sourceEventId: "event-0073",
+      sourceEventId: expect.stringMatching(/^event-\d{4}$/),
     },
   });
   await page.screenshot({
@@ -97,21 +101,16 @@ test("confirmed equipment and Bruised persist into Punish and produce an authori
   }
 
   await page.getByRole("checkbox", { name: "Reduced motion" }).check();
-  await page.getByRole("button", { name: "Start battle" }).click();
+  await bruisedStart.click();
   await expect(page.locator(".battle-screen")).toHaveClass(/reduce-motion/);
-  await page.waitForFunction((factCopy) => {
-    const fact = document.querySelector(".battle-fact-strip p");
-    const pause = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent?.trim() === "Pause battle",
-    );
-    if (fact?.textContent?.trim() !== factCopy || !pause) return false;
-    pause.click();
-    return true;
-  }, BRUISED_PLAN_FACT);
+  await page.getByRole("button", { name: "Pause battle" }).click();
   await expect(page.getByRole("button", { name: "Resume battle" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Current moment" })).toContainText(
+    /The battle begins.*Your team takes its starting positions.*Bo Max HP −12.*Bo HP −12.*Bo is Bruised/i,
+  );
   await expect(page.locator('[data-unit-id="bo"]')).toHaveAttribute(
     "aria-label",
-    /72 of 72 health.*current change Max HP −12, HP −12/i,
+    /HP 72 of 72.*current change: Max HP −12 \(84→72\), HP −12 \(84→72\)\./i,
   );
   await expect(page.locator('[data-unit-id="bo"] .unit-deltas')).toContainText("Max HP −12");
   await expect(page.locator('[data-unit-id="bo"] .unit-deltas')).toContainText("HP −12");
@@ -121,12 +120,15 @@ test("confirmed equipment and Bruised persist into Punish and produce an authori
   });
 
   await page.getByRole("button", { name: "Skip to result" }).click();
-  const changed = page.getByRole("region", { name: "What changed" });
-  await expect(changed.getByRole("heading", { name: "Plan" })).toBeVisible();
-  await expect(changed).toContainText(BRUISED_PLAN_FACT);
-  await changed.getByRole("button", { name: "Show exact event" }).first().click();
-  await expect(page.getByRole("complementary", { name: "Exact events" }).locator("li.is-focused"))
-    .toContainText(BRUISED_PLAN_FACT);
+  const changed = page.getByRole("region", { name: "Battle summary" });
+  const planFact = changed.locator(".result-fact").filter({
+    has: page.getByRole("heading", { level: 3, name: "Plan" }),
+  });
+  await expect(planFact.locator("p")).toContainText("Bo starts Bruised.");
+  await page.getByRole("button", { name: "Battle details" }).click();
+  await expect(page.getByRole("complementary", { name: "Battle details" }).locator("li").filter({
+    hasText: BRUISED_EVENT_FACT,
+  })).toHaveCount(1);
   failures.assertNone();
 });
 
@@ -143,7 +145,9 @@ test("a version-one save without aftermathCondition loads as no prior condition"
   await expect(page.getByRole("heading", { level: 1, name: "Punish the Front" })).toBeVisible();
   const priorCondition = page.getByRole("region", { name: "Prior condition" });
   await expect(priorCondition).toContainText("No injury");
-  await expect(priorCondition).toContainText("Starting health is unchanged");
+  await expect(priorCondition).toContainText(
+    "No hero was knocked out in Pressure the Rear. The team starts with full Max HP.",
+  );
   await expect(priorCondition).not.toContainText("Bruised");
 
   // A normal preference write serialises the schema default, proving the old shape loaded as null.
@@ -174,7 +178,7 @@ test("Ada in middle with Cover rear avoids injury and carries no condition into 
   await page.getByRole("button", { name: /rear Bo/i }).click();
   await page.getByRole("button", { name: "Move to front" }).click();
   await page.getByRole("radio", { name: /Cover rear/i }).check();
-  await expect(page.getByText(/Current plan: Front Bo; Cover rear/i)).toBeVisible();
+  await expect(page.getByText(/Current plan: Bo starts in the front slot.*Team policy: Cover rear/i)).toBeVisible();
 
   await skipBattleToResult(page);
   const aftermath = page.getByRole("region", { name: "Aftermath" });
@@ -190,17 +194,19 @@ test("Ada in middle with Cover rear avoids injury and carries no condition into 
   const priorCondition = page.getByRole("region", { name: "Prior condition" });
   await expect(priorCondition).toContainText("No injury");
   await expect(priorCondition).not.toContainText("Bruised");
+  await expect(page.getByRole("button", { name: "Start battle", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Start with .* Bruised/ })).toHaveCount(0);
   await page.screenshot({
     path: "test-results/evidence/punish-prepare-no-injury-desktop.png",
     fullPage: true,
   });
 
   await skipBattleToResult(page);
-  await expect(page.getByRole("region", { name: "What changed" })).not.toContainText(
+  await expect(page.getByRole("region", { name: "Battle summary" })).not.toContainText(
     "starts Bruised",
   );
-  await page.getByRole("button", { name: "Exact events" }).click();
-  await expect(page.getByRole("complementary", { name: "Exact events" })).not.toContainText(
+  await page.getByRole("button", { name: "Battle details" }).click();
+  await expect(page.getByRole("complementary", { name: "Battle details" })).not.toContainText(
     "starts Bruised",
   );
   failures.assertNone();

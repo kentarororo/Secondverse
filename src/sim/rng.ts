@@ -1,4 +1,10 @@
-export const RNG_STREAM_NAMES = ["initiative", "damage"] as const;
+export const RNG_STREAM_NAMES = [
+  "initiative",
+  "damage",
+  "candidate_structure",
+  "candidate_identity",
+  "candidate_visual",
+] as const;
 export type RngStreamName = (typeof RNG_STREAM_NAMES)[number];
 
 export interface DeterministicRng {

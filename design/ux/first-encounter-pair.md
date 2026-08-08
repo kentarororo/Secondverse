@@ -22,7 +22,7 @@ This specification does not define combat results. It only renders typed simulat
 
 - One authored team and two encounters.
 - Front, middle, and rear formation slots.
-- One team policy choice and one technique policy per hero.
+- One team policy choice and one of two validated stances per hero.
 - A battlefield-first automatic battle.
 - Pause, speed, skip to result, mute, reduced-motion-compatible playback, and an optional exact event inspector.
 - A three-part result explanation: plan, turning point, consequence.
@@ -42,10 +42,10 @@ This specification does not define combat results. It only renders typed simulat
 | --- | --- | ---: | --- |
 | Encounter 1 read | Read the enemy tell and reward category | 10-15 sec | Player enters preparation |
 | Encounter 1 prepare | Change formation and policies, or keep the starting plan | 30-45 sec | Player selects **Start battle** |
-| Encounter 1 battle | Watch normal-speed playback | 55-70 sec | Final typed event is rendered |
+| Encounter 1 battle | Watch normal-speed Key moments playback | 35-75 sec | Outcome moment is rendered |
 | Result and reward | Read three facts and choose one item | 20-30 sec | Player selects **Next encounter** |
 | Encounter 2 read/prepare | Read the changed threat and revise the plan | 20-35 sec | Player selects **Start battle** |
-| Encounter 2 battle | Watch normal-speed playback | 55-70 sec | Final typed event is rendered |
+| Encounter 2 battle | Watch normal-speed Key moments playback | 35-75 sec | Outcome moment is rendered |
 | Final result | Read three facts and choose replay or finish | 15-25 sec | Player chooses an action |
 
 **Pair target:** 205-290 seconds. Playback speed changes may shorten the session but never alter simulation facts.
@@ -105,7 +105,7 @@ Use a 12-column grid, 24 px outer margin, 16 px gutter. The main application reg
 |                                                      |                           |
 |       [REAR]       [MIDDLE]       [FRONT]             | SELECTED HERO              |
 |       [hero]        [hero]         [hero]             | Name / role / health       |
-|       HP + key rule HP + key rule  HP + key rule      | Technique [ selector ]     |
+|       HP + stance   HP + stance    HP + stance        | Stance [ two choices ]     |
 |                                                      | Rule in one short line     |
 |  Select a hero, then Move left / Move right.          |                           |
 |                                                      | [Reset plan]               |
@@ -117,11 +117,17 @@ Use a 12-column grid, 24 px outer margin, 16 px gutter. The main application reg
 - Formation field: columns 1-8, minimum 620 px wide.
 - Plan panel: columns 9-12, 320-380 px wide.
 - Enemy rule is always visible above the formation, never hidden in a tooltip.
-- Each hero card has a visible slot label and position number in addition to spatial placement.
+- Each hero card has a visible slot label, position number, and selected stance in addition to spatial placement.
 - Selecting a hero updates the plan panel; selection does not reorder the team.
+- The selected hero exposes exactly two radio choices from its validated stance definitions. Each choice shows its full trigger, target, point cost, and effect forecast without hover.
+- Team policy stays separate from hero stance. Any hero or slot requirement is stated in the option text.
 - Reordering supports drag, pointer/touch move buttons, and keyboard commands. Drag is never the sole method.
 
 ### 6.2 Battle
+
+- **Key moments** and **Every action** sit beside the enemy rule as a two-state, reversible control. Key moments is selected on entry.
+- The battlefield is followed by one dominant cause-to-result moment card and one quieter three-item Plan tracker. Exact events remains a separate optional control below them.
+- The moment card shows displayed-moment progress and, when applicable, the count of routine actions advanced since the prior displayed moment.
 
 ```text
 +----------------------------------------------------------------------------------+
@@ -193,17 +199,22 @@ Use a 4-column grid, 16 px outer margin, 12 px gutter. Respect safe-area insets.
 | [Move toward rear] [Move to front]   |
 +--------------------------------------+
 | Team policy [full-width selector]    |
-| Technique   [full-width selector]    |
+| Hero stance [two full-width choices] |
 | [Start battle - sticky]              |
 +--------------------------------------+
 ```
 
 - The formation remains visible above policy controls.
 - Hero cards are rows, not tiny side-view figures. Slot order is explicit.
+- Every hero row keeps its selected stance visible; selecting the row exposes that hero's two exact stance choices below.
 - Drag is optional. Tapping a hero then a move button is the primary touch path.
 - The start button may be sticky above the safe-area inset but must not cover content or focused controls.
 
 ### 7.2 Battle
+
+- The playback-mode buttons remain full text and at least 44 px high.
+- The current moment chain stacks cause, target, and result vertically. The three Plan tracker items stack below it; no hero or exact activation effect is hidden.
+- Bruised remains visible at its unit during Punish and is not replaced by the Plan tracker.
 
 ```text
 +--------------------------------------+
@@ -392,22 +403,31 @@ type ResultFactView = {
 
 ## 11. Playback and motion contract
 
-Every rendered action follows the same grammar:
+The authoritative event array remains unchanged. Presentation partitions it once into setup, action, and outcome moments. Every raw event belongs to exactly one moment. An action moment contains one intent and its complete causal result, including target changes, stance use, damage or healing, resource changes, break, defeat, and decisive facts.
+
+**Key moments** is the default. It includes setup and outcome, the first use of every selected stance that occurs, the first enemy rule or mark, policy interception, conditions, equipment, breaks, defeats, and the decisive moment. Repeated routine uses may be compressed. **Every action** is a reversible presentation control and still advances grouped action moments, never individual calculation events.
+
+The current moment card uses one plain chain:
+
+> actor + stance trigger or action -> intended/resolved target -> exact aggregate result
+
+A persistent three-item Plan tracker gives Ada, Bo, and Cy equal space. Before a stance is used it says **Ready** only when linked action-option facts prove readiness; otherwise it says **Not used yet**. After use it shows the latest activation round, exact stance effect and cost, and the relevant aggregate result.
+
+Every rendered action moment follows the same grammar:
 
 > intent -> anticipation -> contact -> consequence -> recovery
 
-At consequence, the number, bar update, status update, and reaction are presented together from one typed event. Animation is a view over already-produced authoritative facts. Simulation does not wait for a transition, animation callback, audio cue, paused player, background tab, or asset load. The presentation queue may lag, catch up, or skip to the supplied final state without changing those facts.
+At consequence, the number, bar update, status update, and reaction are presented together from typed events in the grouped action. Aggregate deltas retain gained, lost, net, before, after, and ordered source IDs so multi-hit, multi-heal, resource-spend, target-change, and line-break chains are exact without showing internal churn. Audio cues only the moment's typed focus event once. Animation is a view over already-produced authoritative facts. Simulation does not wait for a transition, animation callback, audio cue, paused player, background tab, or asset load.
 
-### 11.1 Ordinary action
+### 11.1 Grouped action timing
 
-- Intent readable for 600 ms.
-- Anticipation: 300 ms.
-- Travel: 250-450 ms.
-- Impact hold: 100 ms.
-- Recovery: 320 ms.
+- Routine grouped action: 800-1000 ms at 1x.
+- Stance, enemy-rule, signature, break, defeat, and decisive moments: 2000-2800 ms at 1x.
+- Playback speed divides presentation time only. It never changes events, grouping, focus, state, or result.
 - Stable camera; no shake, zoom, flash, or full-screen overlay.
-- Numeric and status changes appear at the affected unit and remain readable for at least 900 ms. Multiple changes stack in sequence order rather than overlap.
-- Ordinary actions use the shortest complete version of the five-beat grammar. Do not extend ordinary contact or recovery merely to make it feel more important.
+- Health changes are the largest local number and retain a visible `HP` label. Guard, points, strain, speed, and maximum-health changes stack below in sequence order rather than overlap.
+- Marked persists until its action resolves; Broken and Defeated follow the supplied unit state; Bruised remains visible for the full battle when supplied by the command or condition event.
+- The current card reports how many routine actions were advanced since the previous displayed moment.
 
 ### 11.2 Signature event
 
@@ -426,10 +446,10 @@ At consequence, the number, bar update, status update, and reaction are presente
 
 ### 11.4 Reduced motion
 
-- Replace travel with a 120 ms source highlight, then target highlight and result update.
+- Replace travel with a source highlight, then target highlight and result update.
 - Replace camera scale/position changes with a 3 px outline increase and text label.
 - Remove hit-stop, parallax, shake, particle drift, and repeated pulses.
-- Keep intent, action order, exact values, callouts, decisive label, and audio captions unchanged.
+- Keep the same cause, targets, aggregate values, Plan tracker, callouts, decisive label, and progress facts. Every displayed moment remains available for at least 1.5 seconds at 1x.
 - The reduced-motion path must consume the same ordered events and end on the same final frame.
 
 ### 11.5 Skip to result
@@ -467,7 +487,7 @@ At consequence, the number, bar update, status update, and reaction are presente
 | Policy effect | 100 Latin characters reference; 3 lines |
 | Action name | 28 Latin characters reference; 1 desktop line / 2 mobile lines |
 | Signature callout | 8 English reference words; one callout at a time |
-| Current fact strip | 110 Latin characters reference; 2 lines |
+| Current moment chain | Cause, target, and exact result; wraps without truncating mechanics |
 | Statuses on battlefield | 3 per unit; extras shown as `+N` with accessible list |
 | Result fact | 120 Latin characters reference; 3 lines each |
 | Result facts | Exactly 3: plan, turning point, consequence |
@@ -504,7 +524,7 @@ Content that exceeds a budget must wrap or move to the exact-details view. It mu
 
 - UI works at 125% browser text zoom at both target viewports with no loss of mechanical content or action.
 - State is never communicated by color alone.
-- Reduced motion preserves event order, durations needed to read intent, and final state.
+- Reduced motion preserves event order, durations needed to read intent, exact deltas, stance ribbons, status text, and final state while removing rise, shake, and travel.
 - Live announcements do not speak every animation frame; they announce intent, decisive event, result, and player-caused validation errors.
 - Exact values and statuses are reachable with assistive technology.
 
@@ -533,7 +553,7 @@ The UI implementer needs the following before complete binding:
 3. A single typed decisive event reference, or an explicit absence. The UI must not choose one.
 4. Typed signature trigger events and concise localized rule text.
 5. Result facts for plan, turning point, and consequence, each linked to a valid event ID.
-6. Starting plan, valid formation moves, team policy options, technique options, and concrete rejection reasons.
+6. Starting plan, valid formation moves, team policy options, two validated stance options per hero, and concrete rejection reasons.
 7. Reward options and confirmed consequences as typed facts.
 8. Replay identity: seed, encounter ID, input command snapshot, and event sequence.
 9. Audio event IDs/caption keys aligned to typed battle events; UI must emit or forward audio cues through the audio boundary.

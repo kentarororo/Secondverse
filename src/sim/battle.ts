@@ -1,4 +1,4 @@
-import { ENCOUNTERS, ENEMIES, HEROES } from "../content";
+import { ENCOUNTERS, ENEMIES, HEROES, STANCES } from "../content";
 import { COMBAT_TUNING } from "../content/tuning";
 import { EQUIPMENT } from "../equipment";
 import { deriveUnitStats, type UnitStatModifiers } from "./derivedStats";
@@ -18,6 +18,7 @@ import {
   type HeroBlueprint,
   type HeroId,
   type IntentShownEvent,
+  type StanceDefinition,
   type Side,
   type StartBattleCommand,
   type UnitId,
@@ -64,6 +65,7 @@ interface ChosenAction {
   readonly targets: readonly InternalUnit[];
   readonly reason: IntentShownEvent["reason"];
   readonly options: readonly ActionOptionFact[];
+  readonly stance: StanceDefinition | null;
 }
 
 const slotRank: Readonly<Record<FormationSlot, number>> = {
@@ -122,15 +124,42 @@ function rearMostLiving(state: BattleState, side: Side): InternalUnit {
   return target;
 }
 
-function lowestHealthAlly(state: BattleState): InternalUnit | null {
-  const candidates = livingUnits(state, "heroes")
+function injuredAllies(state: BattleState): InternalUnit[] {
+  return livingUnits(state, "heroes")
     .filter((unit) => unit.health < unit.maxHealth)
     .sort((left, right) => {
       const leftRatio = left.health / left.maxHealth;
       const rightRatio = right.health / right.maxHealth;
-      return leftRatio - rightRatio || slotRank[left.slot] - slotRank[right.slot];
+      return (
+        leftRatio - rightRatio ||
+        slotRank[left.slot] - slotRank[right.slot] ||
+        left.id.localeCompare(right.id)
+      );
     });
-  return candidates[0] ?? null;
+}
+
+function lowestHealthEnemy(state: BattleState): InternalUnit {
+  const target = livingUnits(state, "enemies").sort((left, right) => {
+    const leftRatio = left.health / left.maxHealth;
+    const rightRatio = right.health / right.maxHealth;
+    return (
+      leftRatio - rightRatio ||
+      slotRank[left.slot] - slotRank[right.slot] ||
+      left.id.localeCompare(right.id)
+    );
+  })[0];
+  if (!target) {
+    throw new Error("No living enemy target");
+  }
+  return target;
+}
+
+function selectedStance(state: BattleState, heroId: HeroId): StanceDefinition {
+  const stance = STANCES[state.command.plan.stances[heroId]];
+  if (stance.heroId !== heroId) {
+    throw new Error(`Stance ${stance.id} does not belong to ${heroId}`);
+  }
+  return stance;
 }
 
 function createHeroUnit(
@@ -389,53 +418,65 @@ function emitDecisive(
 
 function heroActionOptions(state: BattleState, hero: InternalUnit): ActionOptionFact[] {
   const heroId = hero.id as HeroId;
-  const policy = state.command.plan.techniquePolicies[heroId];
-  const enoughPoints = hero.techniquePoints >= COMBAT_TUNING.techniqueCost;
-  const atPointCap = hero.techniquePoints >= COMBAT_TUNING.techniquePointCap;
+  const stance = selectedStance(state, heroId);
+  const enoughPoints = hero.techniquePoints >= stance.techniqueCost;
   const options: ActionOptionFact[] = [
-    { actionId: "basic", legal: true, score: 10, reasons: ["always_available"] },
+    {
+      actionId: "basic",
+      stanceId: null,
+      legal: true,
+      score: 10,
+      reasons: ["always_available"],
+    },
   ];
 
-  let conditionMet = false;
+  let conditionMet = enoughPoints;
   let legal = enoughPoints;
   const reasons: ActionOptionReason[] = [];
 
   if (!enoughPoints) {
     reasons.push("not_enough_points");
-  } else if (heroId === "cy" && lowestHealthAlly(state) === null) {
-    legal = false;
-    reasons.push("no_injured_ally");
-  } else if (policy === "use_early") {
-    conditionMet = true;
-    reasons.push("use_early");
-  } else if (heroId === "ada") {
-    conditionMet =
-      hero.health / hero.maxHealth <= COMBAT_TUNING.waitForNeedHealthRatio || hero.strain >= 2;
-    reasons.push(conditionMet ? "need_met" : "need_not_met");
-  } else if (heroId === "bo") {
-    conditionMet = livingUnits(state, "enemies").some(
-      (enemy) => enemy.health / enemy.maxHealth < 0.5,
-    );
-    reasons.push(conditionMet ? "need_met" : "need_not_met");
   } else {
-    const injured = lowestHealthAlly(state);
-    legal = enoughPoints && injured !== null;
-    if (!injured) {
-      reasons.push("no_injured_ally");
-    } else {
-      conditionMet = injured.health / injured.maxHealth <= COMBAT_TUNING.waitForNeedHealthRatio;
-      reasons.push(conditionMet ? "need_met" : "need_not_met");
+    switch (stance.trigger.kind) {
+      case "at_points":
+        conditionMet = hero.techniquePoints >= stance.trigger.points;
+        reasons.push("stance_ready");
+        break;
+      case "pressure_or_cap": {
+        const pressureMet =
+          hero.health / hero.maxHealth <= stance.trigger.healthRatio ||
+          hero.strain >= stance.trigger.strain;
+        const forced = hero.techniquePoints >= stance.trigger.forcedPoints;
+        conditionMet = pressureMet || forced;
+        reasons.push(pressureMet ? "stance_triggered" : forced ? "stance_forced" : "stance_waiting");
+        break;
+      }
+      case "weak_enemy_or_cap": {
+        const healthRatio = stance.trigger.healthRatio;
+        const weakEnemy = livingUnits(state, "enemies").some(
+          (enemy) => enemy.health / enemy.maxHealth < healthRatio,
+        );
+        const forced = hero.techniquePoints >= stance.trigger.forcedPoints;
+        conditionMet = weakEnemy || forced;
+        reasons.push(weakEnemy ? "stance_triggered" : forced ? "stance_forced" : "stance_waiting");
+        break;
+      }
+      case "injured_ally_at_points":
+        if (injuredAllies(state).length === 0) {
+          legal = false;
+          conditionMet = false;
+          reasons.push("no_injured_ally");
+        } else {
+          conditionMet = hero.techniquePoints >= stance.trigger.points;
+          reasons.push("stance_ready");
+        }
+        break;
     }
   }
 
-  if (atPointCap) {
-    conditionMet = true;
-    reasons.push("point_cap");
-  }
-
-  const technique = HEROES[heroId].technique;
   options.push({
-    actionId: technique,
+    actionId: stance.actionId,
+    stanceId: stance.id,
     legal,
     score: legal && conditionMet ? 30 : 0,
     reasons,
@@ -450,12 +491,14 @@ function enemyActionOptions(enemy: InternalUnit): ActionOptionFact[] {
     return [
       {
         actionId: "basic",
+        stanceId: null,
         legal: !isThird,
         score: isThird ? 0 : 10,
         reasons: [isThird ? "rear_action_third" : "rear_action_not_third"],
       },
       {
         actionId: "rear_strike",
+        stanceId: null,
         legal: isThird,
         score: isThird ? 30 : 0,
         reasons: [isThird ? "rear_action_third" : "rear_action_not_third"],
@@ -463,12 +506,24 @@ function enemyActionOptions(enemy: InternalUnit): ActionOptionFact[] {
     ];
   }
   if (blueprint.rule === "front_strain") {
-    return [{ actionId: "line_hit", legal: true, score: 20, reasons: ["front_rule"] }];
+    return [
+      { actionId: "line_hit", stanceId: null, legal: true, score: 20, reasons: ["front_rule"] },
+    ];
   }
   if (blueprint.rule === "rear_target") {
-    return [{ actionId: "basic", legal: true, score: 15, reasons: ["rear_rule"] }];
+    return [
+      { actionId: "basic", stanceId: null, legal: true, score: 15, reasons: ["rear_rule"] },
+    ];
   }
-  return [{ actionId: "basic", legal: true, score: 10, reasons: ["always_available"] }];
+  return [
+    {
+      actionId: "basic",
+      stanceId: null,
+      legal: true,
+      score: 10,
+      reasons: ["always_available"],
+    },
+  ];
 }
 
 function chooseAction(state: BattleState, actor: InternalUnit): ChosenAction {
@@ -480,34 +535,50 @@ function chooseAction(state: BattleState, actor: InternalUnit): ChosenAction {
     if (!selected) {
       throw new Error(`No legal action for ${actor.id}`);
     }
-    if (selected.actionId === "first_aid") {
-      const target = lowestHealthAlly(state);
-      if (!target) {
-        throw new Error("First Aid selected without an injured ally");
-      }
+    if (selected.actionId === "basic") {
       return {
-        actionId: selected.actionId,
-        targets: [target],
-        reason:
-          state.command.plan.techniquePolicies.cy === "use_early"
-            ? "technique_ready"
-            : "technique_need",
+        actionId: "basic",
+        targets: [nearestLiving(state, opposingSide(actor.side))],
+        reason: "nearest_target",
         options,
+        stance: null,
       };
     }
+
+    if (selected.stanceId === null) {
+      throw new Error(`Technique ${selected.actionId} is missing a stance`);
+    }
+    const stance = STANCES[selected.stanceId];
+    let targets: readonly InternalUnit[];
+    switch (stance.effect.kind) {
+      case "guard_self":
+        targets = [actor];
+        break;
+      case "hit_front":
+        targets = [nearestLiving(state, "enemies")];
+        break;
+      case "finish_weak":
+        targets = [lowestHealthEnemy(state)];
+        break;
+      case "heal_one":
+        targets = injuredAllies(state).slice(0, stance.effect.maxTargets);
+        break;
+      case "heal_two":
+        targets = injuredAllies(state).slice(0, stance.effect.maxTargets);
+        break;
+    }
+    if (targets.length === 0) {
+      throw new Error(`Stance ${stance.id} selected without a valid target`);
+    }
     return {
-      actionId: selected.actionId,
-      targets:
-        selected.actionId === "brace"
-          ? [actor]
-          : [nearestLiving(state, opposingSide(actor.side))],
+      actionId: stance.actionId,
+      targets,
       reason:
-        selected.actionId === "basic"
-          ? "nearest_target"
-          : state.command.plan.techniquePolicies[actor.id as HeroId] === "use_early"
-            ? "technique_ready"
-            : "technique_need",
+        stance.trigger.kind === "pressure_or_cap" || stance.trigger.kind === "weak_enemy_or_cap"
+          ? "technique_need"
+          : "technique_ready",
       options,
+      stance,
     };
   }
 
@@ -527,6 +598,7 @@ function chooseAction(state: BattleState, actor: InternalUnit): ChosenAction {
       targets: [rearHero ?? nearestLiving(state, "heroes")],
       reason: "rear_third_action",
       options,
+      stance: null,
     };
   }
   if (selected.actionId === "line_hit") {
@@ -535,6 +607,7 @@ function chooseAction(state: BattleState, actor: InternalUnit): ChosenAction {
       targets: [nearestLiving(state, "heroes")],
       reason: "front_pressure",
       options,
+      stance: null,
     };
   }
   const blueprint = ENEMIES[actor.id as keyof typeof ENEMIES];
@@ -544,6 +617,7 @@ function chooseAction(state: BattleState, actor: InternalUnit): ChosenAction {
       targets: [rearMostLiving(state, "heroes")],
       reason: "rear_pressure",
       options,
+      stance: null,
     };
   }
   return {
@@ -551,6 +625,7 @@ function chooseAction(state: BattleState, actor: InternalUnit): ChosenAction {
     targets: [nearestLiving(state, "heroes")],
     reason: "nearest_target",
     options,
+    stance: null,
   };
 }
 
@@ -574,15 +649,15 @@ function performBasic(
   }
 }
 
-function performBrace(state: BattleState, actor: InternalUnit, actionEventId: string): void {
-  applyGuard(state, actor.id, actor, COMBAT_TUNING.braceGuard, "brace", actionEventId);
-  changeTechniquePoints(
-    state,
-    actor,
-    -COMBAT_TUNING.techniqueCost,
-    "technique_cost",
-    actionEventId,
-  );
+function performBrace(
+  state: BattleState,
+  actor: InternalUnit,
+  actionEventId: string,
+  guard: 18 | 26,
+  techniqueCost: 2 | 3,
+): void {
+  applyGuard(state, actor.id, actor, guard, "brace", actionEventId);
+  changeTechniquePoints(state, actor, -techniqueCost, "technique_cost", actionEventId);
 }
 
 function performHeavyHit(
@@ -590,10 +665,11 @@ function performHeavyHit(
   actor: InternalUnit,
   target: InternalUnit,
   actionEventId: string,
+  techniqueCost: 2 | 3,
 ): void {
   let actionPower = COMBAT_TUNING.heavyHitPower;
   let causeId = actionEventId;
-  if (target.health / target.maxHealth < 0.5) {
+  if (target.health / target.maxHealth < COMBAT_TUNING.finishWeakHealthRatio) {
     actionPower += COMBAT_TUNING.followUpBonusPower;
     const signature = emit(state, {
       kind: "signature_triggered",
@@ -614,59 +690,51 @@ function performHeavyHit(
     causedByEventId: causeId,
     useVariance: true,
   });
-  changeTechniquePoints(
-    state,
-    actor,
-    -COMBAT_TUNING.techniqueCost,
-    "technique_cost",
-    actionEventId,
-  );
+  changeTechniquePoints(state, actor, -techniqueCost, "technique_cost", actionEventId);
 }
 
 function performFirstAid(
   state: BattleState,
   actor: InternalUnit,
-  target: InternalUnit,
+  targets: readonly InternalUnit[],
   actionEventId: string,
+  requestedAmount: 16 | 24,
+  techniqueCost: 2 | 3,
 ): void {
-  const wasBelowQuickHelp = target.health / target.maxHealth <= COMBAT_TUNING.quickHelpHealthRatio;
-  const requestedAmount = COMBAT_TUNING.firstAidAmount;
-  const healthGained = Math.min(requestedAmount, target.maxHealth - target.health);
-  target.health += healthGained;
-  const heal = emit(state, {
-    kind: "healed",
-    causedByEventId: actionEventId,
-    actorId: "cy",
-    targetId: target.id as HeroId,
-    requestedAmount,
-    healthGained,
-    healthAfter: target.health,
-  });
-  if (wasBelowQuickHelp) {
-    const signature = emit(state, {
-      kind: "signature_triggered",
-      causedByEventId: heal.eventId,
+  for (const target of targets) {
+    const wasBelowQuickHelp =
+      target.health / target.maxHealth <= COMBAT_TUNING.quickHelpHealthRatio;
+    const healthGained = Math.min(requestedAmount, target.maxHealth - target.health);
+    target.health += healthGained;
+    const heal = emit(state, {
+      kind: "healed",
+      causedByEventId: actionEventId,
       actorId: "cy",
-      signatureName: HEROES.cy.signatureName,
-      targetId: target.id,
-      effect: "low_health_guard",
+      targetId: target.id as HeroId,
+      requestedAmount,
+      healthGained,
+      healthAfter: target.health,
     });
-    applyGuard(
-      state,
-      actor.id,
-      target,
-      COMBAT_TUNING.quickHelpGuard,
-      "quick_help",
-      signature.eventId,
-    );
+    if (wasBelowQuickHelp) {
+      const signature = emit(state, {
+        kind: "signature_triggered",
+        causedByEventId: heal.eventId,
+        actorId: "cy",
+        signatureName: HEROES.cy.signatureName,
+        targetId: target.id,
+        effect: "low_health_guard",
+      });
+      applyGuard(
+        state,
+        actor.id,
+        target,
+        COMBAT_TUNING.quickHelpGuard,
+        "quick_help",
+        signature.eventId,
+      );
+    }
   }
-  changeTechniquePoints(
-    state,
-    actor,
-    -COMBAT_TUNING.techniqueCost,
-    "technique_cost",
-    actionEventId,
-  );
+  changeTechniquePoints(state, actor, -techniqueCost, "technique_cost", actionEventId);
 }
 
 function resolveRearStrikeTarget(
@@ -820,12 +888,26 @@ function performAction(state: BattleState, actor: InternalUnit): void {
     reason: chosen.reason,
   });
 
-  let finalTarget = intendedTarget;
+  let finalTargets = [...chosen.targets];
   let actionCauseId = intent.eventId;
   if (chosen.actionId === "rear_strike") {
     const resolved = resolveRearStrikeTarget(state, actor, intendedTarget, intent.eventId);
-    finalTarget = resolved.target;
+    finalTargets = [resolved.target];
     actionCauseId = resolved.causeId;
+  }
+
+  if (chosen.stance !== null) {
+    const stanceUsed = emit(state, {
+      kind: "stance_used",
+      causedByEventId: intent.eventId,
+      heroId: actor.id as HeroId,
+      stanceId: chosen.stance.id,
+      actionId: chosen.stance.actionId,
+      targetIds: finalTargets.map((target) => target.id),
+      techniquePointsSpent: chosen.stance.techniqueCost,
+      effect: chosen.stance.effect.kind,
+    });
+    actionCauseId = stanceUsed.eventId;
   }
 
   const action = emit(state, {
@@ -833,29 +915,58 @@ function performAction(state: BattleState, actor: InternalUnit): void {
     causedByEventId: actionCauseId,
     actorId: actor.id,
     actionId: chosen.actionId,
-    targetIds: [finalTarget.id],
+    targetIds: finalTargets.map((target) => target.id),
   });
   actor.actionsTaken += 1;
   state.actionCount += 1;
 
   switch (chosen.actionId) {
     case "basic":
-      performBasic(state, actor, finalTarget, action.eventId);
+      performBasic(state, actor, finalTargets[0]!, action.eventId);
       break;
-    case "brace":
-      performBrace(state, actor, action.eventId);
+    case "brace": {
+      const stance = chosen.stance;
+      if (stance === null || stance.effect.kind !== "guard_self") {
+        throw new Error("Brace requires a guard stance");
+      }
+      performBrace(state, actor, action.eventId, stance.effect.guard, stance.techniqueCost);
       break;
+    }
     case "heavy_hit":
-      performHeavyHit(state, actor, finalTarget, action.eventId);
+      if (!chosen.stance) {
+        throw new Error("Heavy Hit requires a stance");
+      }
+      performHeavyHit(
+        state,
+        actor,
+        finalTargets[0]!,
+        action.eventId,
+        chosen.stance.techniqueCost,
+      );
       break;
-    case "first_aid":
-      performFirstAid(state, actor, finalTarget, action.eventId);
+    case "first_aid": {
+      const stance = chosen.stance;
+      if (
+        stance === null ||
+        (stance.effect.kind !== "heal_one" && stance.effect.kind !== "heal_two")
+      ) {
+        throw new Error("First Aid requires a healing stance");
+      }
+      performFirstAid(
+        state,
+        actor,
+        finalTargets,
+        action.eventId,
+        stance.effect.healing,
+        stance.techniqueCost,
+      );
       break;
+    }
     case "rear_strike":
       applyDamage({
         state,
         actor,
-        target: finalTarget,
+        target: finalTargets[0]!,
         actionId: "rear_strike",
         actionPower: COMBAT_TUNING.rearStrikePower,
         causedByEventId: action.eventId,
@@ -863,7 +974,7 @@ function performAction(state: BattleState, actor: InternalUnit): void {
       });
       break;
     case "line_hit":
-      performLineHit(state, actor, finalTarget, action.eventId);
+      performLineHit(state, actor, finalTargets[0]!, action.eventId);
       break;
   }
 }

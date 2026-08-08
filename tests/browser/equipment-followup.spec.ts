@@ -23,10 +23,10 @@ async function seedStoredValue(page: Page, raw: string): Promise<void> {
 
 async function resultSnapshot(page: Page): Promise<string> {
   return [
-    await page.getByRole("region", { name: "Exact outcome" }).innerText(),
+    await page.getByRole("region", { name: "Battle totals" }).innerText(),
     await page.getByRole("region", { name: "Your formation" }).innerText(),
     await page.getByRole("region", { name: "Enemy formation" }).innerText(),
-    await page.getByRole("region", { name: "What changed" }).innerText(),
+    await page.getByRole("region", { name: "Battle summary" }).innerText(),
   ].join("\n---\n");
 }
 
@@ -35,12 +35,12 @@ test("reward gate shows exact options, reversible selection, and required confir
   await openFreshLab(page);
   await skipBattleToResult(page);
 
-  const reward = page.getByRole("region", { name: "Choose front equipment" });
+  const reward = page.getByRole("region", { name: "Choose equipment for the front slot" });
   const heavy = page.getByRole("radio", {
-    name: /Heavy Pad.*Starting guard \+18.*Speed -3/i,
+    name: /Heavy Pad.*At battle start: Guard \+18; Speed −3/i,
   });
   const quick = page.getByRole("radio", {
-    name: /Quick Shoes.*Starting guard \+0.*Speed \+4/i,
+    name: /Quick Shoes.*At battle start: Guard \+0; Speed \+4/i,
   });
   const confirm = page.getByRole("button", { name: "Confirm equipment" });
   const next = page.getByRole("button", { name: "Next encounter" });
@@ -64,7 +64,9 @@ test("reward gate shows exact options, reversible selection, and required confir
   await expect(reward.getByText("Selected")).toHaveCount(1);
 
   await confirm.click();
-  await expect(page.getByRole("status")).toContainText("Quick Shoes is ready for the front slot.");
+  await expect(page.getByRole("status")).toHaveText(
+    "Quick Shoes are assigned to the front slot.",
+  );
   await expect(next).toBeEnabled();
   await expect(quick).toBeChecked();
   await page.screenshot({ path: "test-results/evidence/reward-confirmed-quick-desktop.png", fullPage: true });
@@ -78,22 +80,22 @@ test("confirmed Heavy Pad is truthful in Punish preparation and authoritative ex
 
   const equipped = page.getByRole("region", { name: "Front equipment" });
   await expect(equipped).toContainText("Heavy Pad");
-  await expect(equipped).toContainText(/Ada wears it in front/i);
-  await expect(equipped).toContainText(/Starting guard \+18; Speed -3/i);
-  await expect(page.getByText(/Current plan: Front Ada; Hold front; Heavy Pad/i)).toBeVisible();
+  await expect(equipped).toContainText(/Ada starts in the front slot with Guard \+18 and Speed -3 from Heavy Pad/i);
+  await expect(equipped).not.toContainText(/wears it in front/i);
+  await expect(page.getByText(/Current plan: Ada starts in the front slot.*Team policy: Hold front.*Front equipment: Heavy Pad/i)).toBeVisible();
   await page.screenshot({ path: "test-results/evidence/punish-prepare-heavy-desktop.png", fullPage: true });
 
   await skipBattleToResult(page);
   const equipmentFact =
-    "Heavy Pad applies to Ada in front: starting guard +18; speed -3, from 10 to 7.";
-  await expect(page.getByRole("region", { name: "What changed" })).toContainText(
-    "Bo starts Bruised: health 84 to 72; maximum health 84 to 72.",
+    "Ada starts in the front slot with Heavy Pad. Guard +18; Speed 10 to 7 (-3).";
+  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText(
+    "Bo starts Bruised.",
   );
   await page.screenshot({ path: "test-results/evidence/punish-result-heavy-desktop.png", fullPage: true });
 
-  await page.getByRole("button", { name: "Exact events" }).click();
-  await expect(page.getByRole("complementary", { name: "Exact events" })).toContainText(equipmentFact);
-  await page.getByRole("button", { name: "Close exact events" }).click();
+  await page.getByRole("button", { name: "Battle details" }).click();
+  await expect(page.getByRole("complementary", { name: "Battle details" })).toContainText(equipmentFact);
+  await page.getByRole("button", { name: "Close battle details" }).click();
   failures.assertNone();
 });
 
@@ -107,10 +109,10 @@ test("reload after confirmation resumes Punish the Front with the saved item", a
   await waitForRenderedLab(page);
   await expect(page.getByRole("heading", { level: 1, name: "Punish the Front" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Front equipment" })).toContainText(
-    /Heavy Pad.*Starting guard \+18; Speed -3/i,
+    /Heavy Pad.*Guard \+18.*Speed -3/i,
   );
   await expect(page.getByRole("region", { name: "Prior condition" })).toContainText(
-    /Bo: Bruised.*Next battle HP 72\/72.*Maximum health −12 from 84/i,
+    /Bo: Bruised.*Bo starts this battle at 72\/72 HP.*Bruised reduces Max HP from 84 to 72/i,
   );
   const save = await page.evaluate((key) => window.localStorage.getItem(key), COMBAT_LAB_SAVE_KEY);
   expect(save).toContain('"selectedEquipment":"heavy_pad"');
@@ -123,19 +125,21 @@ test("saved display and playback preferences do not alter deterministic Punish r
   const failures = collectPageFailures(page);
   await openFreshLab(page);
   await reachPunishPreparation(page, "Quick Shoes");
-  await expect(page.getByRole("region", { name: "Prior condition" })).toContainText("Bo: Bruised");
+  await expect(page.getByRole("region", { name: "Prior condition" })).toContainText(
+    "Bo starts this battle at 72/72 HP. Bruised reduces Max HP from 84 to 72.",
+  );
 
   await skipBattleToResult(page);
   const defaultPreferencesResult = await resultSnapshot(page);
-  expect(defaultPreferencesResult).toContain(
-    "Bo starts Bruised: health 84 to 72; maximum health 84 to 72.",
-  );
+  expect(defaultPreferencesResult).toContain("Bo starts Bruised.");
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await waitForRenderedLab(page);
   await page.getByRole("checkbox", { name: "Reduced motion" }).check();
   await page.getByRole("button", { name: "Mute sound" }).click();
-  await page.getByRole("button", { name: "Start battle" }).click();
+  await page.getByRole("button", {
+    name: "Start with Bo Bruised · −12 max HP",
+  }).click();
   await page.getByRole("button", { name: "2x" }).click();
   await page.getByRole("button", { name: "Skip to result" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /^Result:/ })).toBeVisible();
@@ -145,36 +149,38 @@ test("saved display and playback preferences do not alter deterministic Punish r
   await waitForRenderedLab(page);
   await expect(page.getByRole("checkbox", { name: "Reduced motion" })).toBeChecked();
   await expect(page.getByRole("button", { name: "Unmute sound" })).toBeVisible();
-  await page.getByRole("button", { name: "Start battle" }).click();
+  await page.getByRole("button", {
+    name: "Start with Bo Bruised · −12 max HP",
+  }).click();
   await expect(page.getByRole("button", { name: "2x" })).toHaveAttribute("aria-pressed", "true");
   failures.assertNone();
 });
 
-test("malformed save offers recovery and Continue clean opens a clean lab", async ({ page }) => {
+test("malformed save offers recovery and starts without saved data", async ({ page }) => {
   const failures = collectPageFailures(page);
   await seedStoredValue(page, "not-json");
 
   const alert = page.getByRole("alert");
-  await expect(alert).toContainText("Saved data needs attention");
-  await expect(alert).toContainText("Saved data is damaged. Clear it to start clean.");
-  await expect(page.getByRole("button", { name: "Clear saved data" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continue clean" })).toBeVisible();
+  await expect(alert).toContainText("Saved game unavailable");
+  await expect(alert).toContainText("This save is damaged and cannot be used.");
+  await expect(page.getByRole("button", { name: "Delete saved data" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start without saved data" })).toBeVisible();
   await page.screenshot({ path: "test-results/evidence/save-recovery-malformed.png", fullPage: true });
-  await page.getByRole("button", { name: "Continue clean" }).click();
+  await page.getByRole("button", { name: "Start without saved data" }).click();
   await expect(alert).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1, name: "Pressure the Rear" })).toBeVisible();
   failures.assertNone();
 });
 
-test("incompatible save offers recovery and Clear saved data removes it", async ({ page }) => {
+test("incompatible save offers recovery and Delete saved data removes it", async ({ page }) => {
   const failures = collectPageFailures(page);
   await seedStoredValue(page, JSON.stringify({ version: 2 }));
 
   const alert = page.getByRole("alert");
-  await expect(alert).toContainText("Saved data uses a different version. Clear it to start clean.");
-  await expect(page.getByRole("button", { name: "Continue clean" })).toBeVisible();
+  await expect(alert).toContainText("This save cannot be used with the current build.");
+  await expect(page.getByRole("button", { name: "Start without saved data" })).toBeVisible();
   await page.screenshot({ path: "test-results/evidence/save-recovery-incompatible.png", fullPage: true });
-  await page.getByRole("button", { name: "Clear saved data" }).click();
+  await page.getByRole("button", { name: "Delete saved data" }).click();
   await expect(alert).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1, name: "Pressure the Rear" })).toBeVisible();
   expect(await page.evaluate((key) => window.localStorage.getItem(key), COMBAT_LAB_SAVE_KEY)).toBeNull();

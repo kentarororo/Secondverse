@@ -13,8 +13,17 @@ export type EncounterId = (typeof ENCOUNTER_IDS)[number];
 export const TEAM_POLICY_IDS = ["hold_front", "cover_rear"] as const;
 export type TeamPolicyId = (typeof TEAM_POLICY_IDS)[number];
 
-export const TECHNIQUE_POLICY_IDS = ["use_early", "wait_for_need"] as const;
-export type TechniquePolicyId = (typeof TECHNIQUE_POLICY_IDS)[number];
+export const ADA_STANCE_IDS = ["ada_brace_early", "ada_brace_under_pressure"] as const;
+export type AdaStanceId = (typeof ADA_STANCE_IDS)[number];
+
+export const BO_STANCE_IDS = ["bo_hit_front", "bo_finish_weak"] as const;
+export type BoStanceId = (typeof BO_STANCE_IDS)[number];
+
+export const CY_STANCE_IDS = ["cy_aid_one", "cy_aid_two"] as const;
+export type CyStanceId = (typeof CY_STANCE_IDS)[number];
+
+export const HERO_STANCE_IDS = [...ADA_STANCE_IDS, ...BO_STANCE_IDS, ...CY_STANCE_IDS] as const;
+export type HeroStanceId = (typeof HERO_STANCE_IDS)[number];
 
 export const HERO_ACTION_IDS = ["basic", "brace", "heavy_hit", "first_aid"] as const;
 export type HeroActionId = (typeof HERO_ACTION_IDS)[number];
@@ -51,6 +60,42 @@ export interface HeroBlueprint {
   readonly technique: Exclude<HeroActionId, "basic">;
   readonly techniqueName: string;
   readonly signatureName: string;
+  readonly stanceIds: readonly [HeroStanceId, HeroStanceId];
+}
+
+export type StanceTrigger =
+  | { readonly kind: "at_points"; readonly points: 2 | 3 }
+  | {
+      readonly kind: "pressure_or_cap";
+      readonly minimumPoints: 2;
+      readonly healthRatio: 0.6;
+      readonly strain: 2;
+      readonly forcedPoints: 3;
+    }
+  | {
+      readonly kind: "weak_enemy_or_cap";
+      readonly minimumPoints: 2;
+      readonly healthRatio: 0.5;
+      readonly forcedPoints: 3;
+    }
+  | { readonly kind: "injured_ally_at_points"; readonly points: 2 | 3 };
+
+export type StanceEffect =
+  | { readonly kind: "guard_self"; readonly guard: 18 | 26 }
+  | { readonly kind: "hit_front" }
+  | { readonly kind: "finish_weak" }
+  | { readonly kind: "heal_one"; readonly healing: 24; readonly maxTargets: 1 }
+  | { readonly kind: "heal_two"; readonly healing: 16; readonly maxTargets: 2 };
+
+export interface StanceDefinition {
+  readonly id: HeroStanceId;
+  readonly heroId: HeroId;
+  readonly name: string;
+  readonly forecast: string;
+  readonly actionId: Exclude<HeroActionId, "basic">;
+  readonly techniqueCost: 2 | 3;
+  readonly trigger: StanceTrigger;
+  readonly effect: StanceEffect;
 }
 
 export type EnemyRule = "nearest" | "rear_target" | "rear_every_third" | "front_strain";
@@ -75,12 +120,16 @@ export interface BattleFormation {
   readonly rear: HeroId;
 }
 
-export type HeroTechniquePolicies = Readonly<Record<HeroId, TechniquePolicyId>>;
+export interface HeroStances {
+  readonly ada: AdaStanceId;
+  readonly bo: BoStanceId;
+  readonly cy: CyStanceId;
+}
 
 export interface BattlePlan {
   readonly formation: BattleFormation;
   readonly teamPolicy: TeamPolicyId;
-  readonly techniquePolicies: HeroTechniquePolicies;
+  readonly stances: HeroStances;
   readonly frontEquipment: EquipmentSelectionId;
   readonly priorCondition: PriorCondition | null;
 }
@@ -118,10 +167,10 @@ export interface RoundStartedEvent extends EventBase {
 export type ActionOptionReason =
   | "always_available"
   | "not_enough_points"
-  | "use_early"
-  | "need_not_met"
-  | "need_met"
-  | "point_cap"
+  | "stance_ready"
+  | "stance_waiting"
+  | "stance_triggered"
+  | "stance_forced"
   | "no_injured_ally"
   | "rear_action_not_third"
   | "rear_action_third"
@@ -130,6 +179,7 @@ export type ActionOptionReason =
 
 export interface ActionOptionFact {
   readonly actionId: ActionId;
+  readonly stanceId: HeroStanceId | null;
   readonly legal: boolean;
   readonly score: number;
   readonly reasons: readonly ActionOptionReason[];
@@ -161,6 +211,17 @@ export interface ActionStartedEvent extends EventBase {
   readonly actorId: UnitId;
   readonly actionId: ActionId;
   readonly targetIds: readonly UnitId[];
+}
+
+export interface StanceUsedEvent extends EventBase {
+  readonly kind: "stance_used";
+  readonly causedByEventId: string;
+  readonly heroId: HeroId;
+  readonly stanceId: HeroStanceId;
+  readonly actionId: Exclude<HeroActionId, "basic">;
+  readonly targetIds: readonly UnitId[];
+  readonly techniquePointsSpent: 2 | 3;
+  readonly effect: StanceEffect["kind"];
 }
 
 export interface PolicyTriggeredEvent extends EventBase {
@@ -320,6 +381,7 @@ export type BattleEvent =
   | RoundStartedEvent
   | ActionOptionsEvent
   | IntentShownEvent
+  | StanceUsedEvent
   | ActionStartedEvent
   | PolicyTriggeredEvent
   | EquipmentAppliedEvent

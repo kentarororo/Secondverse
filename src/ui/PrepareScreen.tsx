@@ -1,17 +1,18 @@
 import { useEffect, useRef } from "react";
-import { AUTHORED_TRIO, ENCOUNTERS } from "../content";
+import { AUTHORED_TRIO, ENCOUNTERS, STANCES, stancesForHero } from "../content";
 import { EQUIPMENT } from "../equipment";
 import {
   deriveUnitStats,
   simulateBattle,
   type FormationSlot,
+  type HeroStanceId,
   type StartBattleCommand,
 } from "../sim";
 import { useCombatLabRepository } from "../state/repositoryContext";
-import { useStudioStore } from "../state/studioStore";
+import { useStudioStore, type StanceSelection } from "../state/studioStore";
 import { battleAudio } from "./audio";
-import { TEAM_POLICY_COPY, TECHNIQUE_POLICY_COPY, UI_COPY } from "./copy";
-import { silhouetteClassNames } from "./presentation";
+import { CombatVisual } from "./CombatVisual";
+import { TEAM_POLICY_COPY, UI_COPY } from "./copy";
 
 const SLOTS: readonly FormationSlot[] = ["front", "middle", "rear"];
 const SEEDS = {
@@ -20,10 +21,32 @@ const SEEDS = {
 } as const;
 
 const HERO_RULES = {
-  ada: "Brace adds guard. Step In can cover a marked rear hit from the middle slot.",
-  bo: "Heavy Hit deals more damage. Follow Up adds damage below half health.",
-  cy: "First Aid heals the most injured ally. Quick Help can add guard.",
+  ada: "Brace gives Ada Guard. Step In lets her intercept a marked rear attack while she is alive in the middle slot.",
+  bo: "Heavy Hit deals extra damage. Follow Up deals more damage to an enemy below half HP.",
+  cy: "First Aid restores HP to the most injured ally. Quick Help can also give that ally Guard.",
 } as const;
+
+function heroName(heroId: "ada" | "bo" | "cy"): string {
+  return heroId === "ada" ? "Ada" : heroId === "bo" ? "Bo" : "Cy";
+}
+
+function roleName(role: string): string {
+  return `${role.charAt(0).toUpperCase()}${role.slice(1)}`;
+}
+
+function stanceSelection(stanceId: HeroStanceId): StanceSelection {
+  switch (stanceId) {
+    case "ada_brace_early":
+    case "ada_brace_under_pressure":
+      return { heroId: "ada", stanceId };
+    case "bo_hit_front":
+    case "bo_finish_weak":
+      return { heroId: "bo", stanceId };
+    case "cy_aid_one":
+    case "cy_aid_two":
+      return { heroId: "cy", stanceId };
+  }
+}
 
 export function PrepareScreen() {
   const firstFormationRender = useRef(true);
@@ -34,7 +57,7 @@ export function PrepareScreen() {
   const selectHero = useStudioStore((state) => state.selectHero);
   const moveHero = useStudioStore((state) => state.moveHero);
   const setTeamPolicy = useStudioStore((state) => state.setTeamPolicy);
-  const setTechniquePolicy = useStudioStore((state) => state.setTechniquePolicy);
+  const setStance = useStudioStore((state) => state.setStance);
   const resetPlan = useStudioStore((state) => state.resetPlan);
   const beginBattle = useStudioStore((state) => state.beginBattle);
   const muted = useStudioStore((state) => state.muted);
@@ -56,6 +79,10 @@ export function PrepareScreen() {
           maxHealth: -aftermathCondition.healthPenalty,
         }).maxHealth
       : null;
+  const bruisedStartLabel =
+    encounterId === "punish_front" && aftermathCondition && conditionHero
+      ? `Start with ${conditionHero.name} Bruised · −${aftermathCondition.healthPenalty} max HP`
+      : UI_COPY.startBattle;
 
   useEffect(() => {
     if (firstFormationRender.current) {
@@ -127,19 +154,19 @@ export function PrepareScreen() {
             <strong>{equippedItem.name}</strong>
           </div>
           <p>
-            {plan.formation.front === "ada" ? "Ada" : plan.formation.front === "bo" ? "Bo" : "Cy"} wears it in front. Starting guard +{equippedItem.effects.startingGuard}; Speed {equippedItem.effects.speed >= 0 ? "+" : ""}{equippedItem.effects.speed}.
+            {heroName(plan.formation.front)} starts in the front slot with Guard +{equippedItem.effects.startingGuard} and Speed {equippedItem.effects.speed >= 0 ? "+" : ""}{equippedItem.effects.speed} from {equippedItem.name}.
           </p>
         </section>
       ) : null}
 
-      {encounterId === "punish_front" && conditionHero && conditionMaxHealth !== null ? (
-        <section className="prior-condition-banner" aria-label="Prior condition">
+      {encounterId === "punish_front" && aftermathCondition && conditionHero && conditionMaxHealth !== null ? (
+        <section className="prior-condition-banner condition-start-panel" aria-label="Prior condition">
           <div>
-            <span className="eyebrow">Prior condition</span>
+            <span className="eyebrow">Starts this battle</span>
             <strong>{conditionHero.name}: Bruised</strong>
           </div>
           <p>
-            Next battle HP {conditionMaxHealth}/{conditionMaxHealth}. Maximum health −{aftermathCondition?.healthPenalty} from {conditionHero.stats.maxHealth}.
+            {conditionHero.name} starts this battle at {conditionMaxHealth}/{conditionMaxHealth} HP. Bruised reduces Max HP from {conditionHero.stats.maxHealth} to {conditionMaxHealth}.
           </p>
         </section>
       ) : encounterId === "punish_front" && progress.pressureRearCompleted ? (
@@ -148,7 +175,7 @@ export function PrepareScreen() {
             <span className="eyebrow">Prior condition</span>
             <strong>No injury</strong>
           </div>
-          <p>No hero was knocked out in Pressure the Rear. Starting health is unchanged.</p>
+          <p>No hero was knocked out in Pressure the Rear. The team starts with full Max HP.</p>
         </section>
       ) : null}
 
@@ -166,6 +193,7 @@ export function PrepareScreen() {
               const hero = AUTHORED_TRIO.find((candidate) => candidate.id === plan.formation[slot]);
               if (!hero) throw new Error(`Missing hero in ${slot}`);
               const selected = hero.id === selectedHeroId;
+              const selectedStance = STANCES[plan.stances[hero.id]];
               return (
                 <button
                   className={`plan-hero-card${selected ? " is-selected" : ""}`}
@@ -176,29 +204,23 @@ export function PrepareScreen() {
                   aria-pressed={selected}
                 >
                   <span className="slot-number">{SLOTS.indexOf(slot) + 1}</span>
-                  <span
-                    className={`unit-silhouette plan-hero-silhouette ${silhouetteClassNames(hero.id)}`}
-                    aria-hidden="true"
-                  >
-                    <span className="silhouette-head" />
-                    <span className="silhouette-body" />
-                    <span className="silhouette-detail" />
-                  </span>
+                  <CombatVisual unitId={hero.id} className="plan-hero-silhouette" />
                   <span className="plan-hero-copy">
                     <span className="slot-label">{slot}</span>
                     <strong>{hero.name}</strong>
-                    <span>{hero.role}</span>
+                    <span>{roleName(hero.role)}</span>
                     <span>
-                      HP {hero.stats.maxHealth} · Defence {hero.stats.defence}
+                      HP {hero.stats.maxHealth} · Defense {hero.stats.defence}
                     </span>
+                    <span className="stance-label">Stance: {selectedStance.name}</span>
                     {slot === "front" && encounterId === "punish_front" && equippedItem ? (
                       <span className="front-equipment-label">
-                        {equippedItem.name}: Guard +{equippedItem.effects.startingGuard}, Speed {equippedItem.effects.speed >= 0 ? "+" : ""}{equippedItem.effects.speed}
+                        {equippedItem.name}: Guard +{equippedItem.effects.startingGuard}; Speed {equippedItem.effects.speed >= 0 ? "+" : ""}{equippedItem.effects.speed}
                       </span>
                     ) : null}
                     {encounterId === "punish_front" && aftermathCondition?.heroId === hero.id && conditionMaxHealth !== null ? (
                       <span className="condition-label">
-                        Bruised: HP {conditionMaxHealth}/{conditionMaxHealth}, Max HP −{aftermathCondition.healthPenalty}
+                        Bruised: HP {conditionMaxHealth}/{conditionMaxHealth}; Max HP −{aftermathCondition.healthPenalty}
                       </span>
                     ) : null}
                   </span>
@@ -246,38 +268,42 @@ export function PrepareScreen() {
             ))}
           </fieldset>
 
-          <fieldset className="option-group">
-            <legend>{selectedHero.name} {UI_COPY.techniquePolicy.toLocaleLowerCase()}</legend>
-            {(Object.keys(TECHNIQUE_POLICY_COPY) as (keyof typeof TECHNIQUE_POLICY_COPY)[]).map(
-              (policyId) => (
-                <label className="option-card" key={policyId}>
-                  <input
-                    type="radio"
-                    name={`${selectedHero.id}-technique-policy`}
-                    checked={plan.techniquePolicies[selectedHero.id] === policyId}
-                    onChange={() => setTechniquePolicy(selectedHero.id, policyId)}
-                  />
-                  <span>
-                    <strong>{TECHNIQUE_POLICY_COPY[policyId].name}</strong>
-                    <small>{TECHNIQUE_POLICY_COPY[policyId].effect}</small>
-                  </span>
-                </label>
-              ),
-            )}
+          <fieldset className="option-group stance-options">
+            <legend>{selectedHero.name} {UI_COPY.stance.toLocaleLowerCase()}</legend>
+            {stancesForHero(selectedHero.id).map((stance) => (
+              <label className="option-card" key={stance.id}>
+                <input
+                  type="radio"
+                  name={`${selectedHero.id}-stance`}
+                  checked={plan.stances[selectedHero.id] === stance.id}
+                  onChange={() => setStance(stanceSelection(stance.id))}
+                />
+                <span>
+                  <strong>{stance.name}</strong>
+                  <small>{stance.forecast}</small>
+                </span>
+              </label>
+            ))}
           </fieldset>
         </aside>
       </div>
 
       <footer className="prepare-footer">
         <p className="plan-summary">
-          <strong>Current plan:</strong> Front {plan.formation.front === "ada" ? "Ada" : plan.formation.front === "bo" ? "Bo" : "Cy"}; {TEAM_POLICY_COPY[plan.teamPolicy].name}{encounterId === "punish_front" && equippedItem ? `; ${equippedItem.name}` : ""}{encounterId === "punish_front" && conditionHero ? `; ${conditionHero.name} Bruised` : ""}.
+          <strong>Current plan:</strong> {heroName(plan.formation.front)} starts in the front slot. Team policy: {TEAM_POLICY_COPY[plan.teamPolicy].name}.{encounterId === "punish_front" && equippedItem ? ` Front equipment: ${equippedItem.name}.` : ""}{encounterId === "punish_front" && conditionHero ? ` ${conditionHero.name} starts Bruised.` : ""}
+          <span className="stance-summary"> Stances: Ada — {STANCES[plan.stances.ada].name}; Bo — {STANCES[plan.stances.bo].name}; Cy — {STANCES[plan.stances.cy].name}.</span>
         </p>
         <div className="footer-actions">
+          {encounterId === "punish_front" && aftermathCondition && conditionHero ? (
+            <span className="condition-start-reminder">
+              {conditionHero.name} starts Bruised · −{aftermathCondition.healthPenalty} max HP
+            </span>
+          ) : null}
           <button className="button button-quiet" type="button" onClick={resetPlan}>
             {UI_COPY.resetPlan}
           </button>
           <button className="button button-primary" type="button" onClick={startBattle}>
-            {UI_COPY.startBattle}
+            {bruisedStartLabel}
           </button>
         </div>
       </footer>

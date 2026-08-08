@@ -1,28 +1,31 @@
 import { create } from "zustand";
 import { deriveAftermath, type AftermathFact, type PriorCondition } from "../aftermath";
+import { draftCandidateRoster, type DraftRosterResult } from "../candidates";
 import type { EquipmentId, EquipmentSelectionId } from "../equipment";
 import type { CombatLabSave, SaveReadResult, SaveRepository, SaveWriteResult } from "../save";
 import { createDefaultCombatLabSave } from "../save";
 import type {
   BattlePlan,
   BattleResult,
+  AdaStanceId,
+  BoStanceId,
+  CyStanceId,
   EncounterId,
   FormationSlot,
   HeroId,
   TeamPolicyId,
-  TechniquePolicyId,
 } from "../sim";
 
-type Screen = "prepare" | "battle" | "result";
+type Screen = "prepare" | "battle" | "result" | "candidates";
 type PlaybackSpeed = 1 | 1.5 | 2;
 
 export const DEFAULT_PLAN: BattlePlan = {
   formation: { front: "ada", middle: "cy", rear: "bo" },
   teamPolicy: "hold_front",
-  techniquePolicies: {
-    ada: "wait_for_need",
-    bo: "use_early",
-    cy: "wait_for_need",
+  stances: {
+    ada: "ada_brace_under_pressure",
+    bo: "bo_hit_front",
+    cy: "cy_aid_one",
   },
   frontEquipment: "none",
   priorCondition: null,
@@ -38,6 +41,11 @@ interface ProgressState {
   readonly pressureRearCompleted: boolean;
   readonly punishFrontCompleted: boolean;
 }
+
+export type StanceSelection =
+  | { readonly heroId: "ada"; readonly stanceId: AdaStanceId }
+  | { readonly heroId: "bo"; readonly stanceId: BoStanceId }
+  | { readonly heroId: "cy"; readonly stanceId: CyStanceId };
 
 interface StudioState {
   readonly screen: Screen;
@@ -60,10 +68,13 @@ interface StudioState {
   readonly saveHydrated: boolean;
   readonly saveRecoveryMessage: string | null;
   readonly saveNotice: string | null;
+  readonly candidateSetNumber: number;
+  readonly candidateRoster: DraftRosterResult | null;
+  readonly favoriteCandidateId: string | null;
   selectHero: (heroId: HeroId) => void;
   moveHero: (heroId: HeroId, toSlot: FormationSlot) => void;
   setTeamPolicy: (policyId: TeamPolicyId) => void;
-  setTechniquePolicy: (heroId: HeroId, policyId: TechniquePolicyId) => void;
+  setStance: (selection: StanceSelection) => void;
   resetPlan: () => void;
   beginBattle: (result: BattleResult) => void;
   setPlaybackCursor: (cursor: number) => void;
@@ -85,14 +96,28 @@ interface StudioState {
   clearSavedData: (repository: SaveRepository<CombatLabSave>) => SaveWriteResult;
   continueClean: () => void;
   dismissSaveNotice: () => void;
+  openCandidateLab: () => void;
+  returnToPreparation: () => void;
+  newCandidateSet: () => void;
+  chooseCandidate: (candidateId: string) => void;
   resetLab: () => void;
+}
+
+function candidateCommand(setNumber: number) {
+  return {
+    type: "draft_candidate_roster",
+    version: 1,
+    poolVersion: 1,
+    seed: `candidate-lab-${String(setNumber).padStart(3, "0")}`,
+    count: 3,
+  } as const;
 }
 
 function clonePlan(plan: BattlePlan): BattlePlan {
   return {
     formation: { ...plan.formation },
     teamPolicy: plan.teamPolicy,
-    techniquePolicies: { ...plan.techniquePolicies },
+    stances: { ...plan.stances },
     frontEquipment: plan.frontEquipment,
     priorCondition: plan.priorCondition,
   };
@@ -120,6 +145,9 @@ function initialState() {
     saveHydrated: false,
     saveRecoveryMessage: null,
     saveNotice: null,
+    candidateSetNumber: 1,
+    candidateRoster: null,
+    favoriteCandidateId: null,
   };
 }
 
@@ -176,13 +204,32 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     }),
   setTeamPolicy: (teamPolicy) =>
     set((state) => ({ plan: { ...state.plan, teamPolicy } })),
-  setTechniquePolicy: (heroId, policyId) =>
-    set((state) => ({
-      plan: {
-        ...state.plan,
-        techniquePolicies: { ...state.plan.techniquePolicies, [heroId]: policyId },
-      },
-    })),
+  setStance: (selection) =>
+    set((state) => {
+      switch (selection.heroId) {
+        case "ada":
+          return {
+            plan: {
+              ...state.plan,
+              stances: { ...state.plan.stances, ada: selection.stanceId },
+            },
+          };
+        case "bo":
+          return {
+            plan: {
+              ...state.plan,
+              stances: { ...state.plan.stances, bo: selection.stanceId },
+            },
+          };
+        case "cy":
+          return {
+            plan: {
+              ...state.plan,
+              stances: { ...state.plan.stances, cy: selection.stanceId },
+            },
+          };
+      }
+    }),
   resetPlan: () =>
     set((state) => ({
       plan: {
@@ -371,5 +418,32 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
   continueClean: () => set({ ...initialState(), saveHydrated: true }),
   dismissSaveNotice: () => set({ saveNotice: null }),
+  openCandidateLab: () =>
+    set((state) => ({
+      screen: "candidates",
+      candidateRoster:
+        state.candidateRoster ?? draftCandidateRoster(candidateCommand(state.candidateSetNumber)),
+    })),
+  returnToPreparation: () => set({ screen: "prepare" }),
+  newCandidateSet: () =>
+    set((state) => {
+      const candidateSetNumber = state.candidateSetNumber + 1;
+      return {
+        screen: "candidates",
+        candidateSetNumber,
+        candidateRoster: draftCandidateRoster(candidateCommand(candidateSetNumber)),
+        favoriteCandidateId: null,
+      };
+    }),
+  chooseCandidate: (candidateId) =>
+    set((state) => {
+      if (
+        state.candidateRoster?.status !== "ok" ||
+        !state.candidateRoster.candidates.some((candidate) => candidate.candidateId === candidateId)
+      ) {
+        return state;
+      }
+      return { favoriteCandidateId: candidateId };
+    }),
   resetLab: () => set(initialState()),
 }));

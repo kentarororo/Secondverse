@@ -5,13 +5,13 @@ const encounterInputs = [
   {
     id: "pressure_rear",
     name: "Pressure the Rear",
-    tell: "This team presses the rear. Rear Attacker marks that slot before every third action.",
+    tell: "Rear Attacker marks the hero in the rear slot before every third action it takes.",
     enemyIds: ["rear_guard", "rear_helper", "rear_attacker"],
   },
   {
     id: "punish_front",
     name: "Punish the Front",
-    tell: "Line Breaker adds strain to the front hero. Three strain causes a break.",
+    tell: "Line Breaker gives 1 Strain to the hero in the front slot. At 3 Strain, that hero is Broken.",
     enemyIds: ["line_guard", "line_breaker", "line_helper"],
   },
 ] as const;

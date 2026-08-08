@@ -1,8 +1,12 @@
-import type { UnitSnapshot } from "../sim";
+import type { ActionId, UnitSnapshot } from "../sim";
+import { CombatVisual } from "./CombatVisual";
 import {
+  effectVisualIdsForDeltas,
   silhouetteClassNames,
   type ReactionKind,
+  type StanceRibbon,
   type UnitDelta,
+  type UnitStatusCue,
 } from "./presentation";
 
 interface UnitCardProps {
@@ -12,6 +16,10 @@ interface UnitCardProps {
   readonly final?: boolean;
   readonly deltas?: readonly UnitDelta[];
   readonly reaction?: ReactionKind;
+  readonly statusCues?: readonly UnitStatusCue[];
+  readonly stanceRibbon?: StanceRibbon | null;
+  readonly actionId?: ActionId;
+  readonly feedbackKey?: string;
 }
 
 function percent(value: number, maximum: number): number {
@@ -25,16 +33,19 @@ export function UnitCard({
   final = false,
   deltas = [],
   reaction,
+  statusCues = [],
+  stanceRibbon,
+  actionId,
+  feedbackKey,
 }: UnitCardProps) {
   const states = [
     unit.guard > 0 ? `Guard ${unit.guard}` : null,
     unit.techniquePoints > 0 && unit.side === "heroes"
-      ? `Technique ${unit.techniquePoints} of 3`
+      ? `Points ${unit.techniquePoints} of 3`
       : null,
     unit.strain > 0 ? `Strain ${unit.strain} of 3` : null,
-    unit.broken ? "Broken" : null,
-    unit.defeated ? "Defeated" : null,
   ].filter((state): state is string => state !== null);
+  const statusLabels = statusCues.map((status) => status.label);
   const reactionLabel =
     reaction === "damage"
       ? "Hit"
@@ -49,7 +60,7 @@ export function UnitCard({
   return (
     <article
       className={`unit-card side-${unit.side} slot-${unit.slot} ${silhouetteClassNames(unit.id)}${acting ? " is-acting" : ""}${targeted ? " is-targeted" : ""}${reaction ? ` reaction-${reaction}` : ""}${unit.defeated ? " is-defeated" : ""}${final ? " is-final" : ""}`}
-      aria-label={`${unit.name}, ${unit.side === "heroes" ? "your team" : "enemy"}, ${unit.slot}, ${unit.health} of ${unit.maxHealth} health, speed ${unit.speed}${states.length > 0 ? `, ${states.join(", ")}` : ""}${deltas.length > 0 ? `, current change ${deltas.map((delta) => delta.text).join(", ")}` : ""}`}
+      aria-label={`${unit.name}, ${unit.side === "heroes" ? "your team" : "enemy"}, ${unit.slot} slot. HP ${unit.health} of ${unit.maxHealth}. Speed ${unit.speed}.${statusLabels.length > 0 ? ` ${statusLabels.join(", ")}.` : ""}${states.length > 0 ? ` ${states.join(". ")}.` : ""}${stanceRibbon ? ` Stance used: ${stanceRibbon.name}. ${stanceRibbon.detail}${/[.!?]$/.test(stanceRibbon.detail) ? "" : "."}` : ""}${deltas.length > 0 ? ` Current change: ${deltas.map((delta) => delta.text).join(", ")}.` : ""}`}
       data-unit-id={unit.id}
     >
       <div className="unit-state-labels" aria-hidden="true">
@@ -57,19 +68,35 @@ export function UnitCard({
         {targeted ? <span className="state-flag target-flag">Target</span> : null}
         {reactionLabel ? <span className={`state-flag reaction-flag reaction-flag-${reaction}`}>{reactionLabel}</span> : null}
       </div>
-      <div className="unit-silhouette" aria-hidden="true">
-        <span className="silhouette-head" />
-        <span className="silhouette-body" />
-        <span className="silhouette-detail" />
-      </div>
+      <CombatVisual
+        unitId={unit.id}
+        {...(actionId ? { actionId } : {})}
+        statusIds={statusCues.map((status) => status.visualId)}
+        effectIds={effectVisualIdsForDeltas(deltas)}
+      />
+      {stanceRibbon ? (
+        <div className="stance-ribbon" aria-label={`${stanceRibbon.name} stance used`}>
+          <span>
+            {stanceRibbon.trigger === "condition" ? "Condition met" : stanceRibbon.trigger === "forced" ? "Used at the Points cap" : "Ready"}
+          </span>
+          <strong>{stanceRibbon.name}</strong>
+          <small>{stanceRibbon.detail}</small>
+        </div>
+      ) : null}
       {deltas.length > 0 ? (
         <div className="unit-deltas" aria-label={`${unit.name} current changes`}>
           {deltas.map((delta) => (
             <span
-              className={`unit-delta delta-${delta.kind} ${delta.amount >= 0 ? "delta-gain" : "delta-loss"}`}
-              key={`${delta.kind}-${delta.text}-${delta.amount}`}
+              className={`unit-delta delta-${delta.kind} ${delta.kind === "health" ? "delta-primary" : "delta-secondary"} ${delta.amount >= 0 ? "delta-gain" : "delta-loss"}`}
+              key={`${feedbackKey ?? "feedback"}-${delta.kind}-${delta.text}-${delta.amount}`}
+              aria-label={delta.text}
             >
-              {delta.text}
+              {delta.kind === "health" ? (
+                <>
+                  <small>HP</small>
+                  <strong>{delta.amount >= 0 ? "+" : "−"}{Math.abs(delta.amount)}</strong>
+                </>
+              ) : delta.text}
             </span>
           ))}
         </div>
@@ -101,8 +128,17 @@ export function UnitCard({
           {unit.side === "heroes" ? <span>Points {unit.techniquePoints}/3</span> : null}
           {unit.strain > 0 ? <span>Strain {unit.strain}/3</span> : null}
         </div>
-        {states.length > 0 ? (
+        {statusLabels.length > 0 || states.length > 0 ? (
           <ul className="status-list" aria-label={`${unit.name} statuses`}>
+            {statusCues.map((status) => (
+              <li
+                className={`status-cue status-${status.kind}`}
+                data-status-visual-id={status.visualId}
+                key={`${status.kind}-${status.label}`}
+              >
+                {status.label}
+              </li>
+            ))}
             {states.slice(0, 3).map((state) => (
               <li key={state}>{state}</li>
             ))}
