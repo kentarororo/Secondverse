@@ -4,6 +4,7 @@ import { getEquipmentRewardOptions } from "../equipment";
 import { useCombatLabRepository } from "../state/repositoryContext";
 import { useStudioStore } from "../state/studioStore";
 import { Battlefield } from "./Battlefield";
+import { deriveBattleCausalReport } from "./battleCausalReport";
 import { EventInspector } from "./EventInspector";
 import { resultFacts, unitName } from "./presentation";
 import { UI_COPY } from "./copy";
@@ -49,7 +50,9 @@ export function ResultScreen() {
   }
 
   const encounter = ENCOUNTERS[result.command.encounterId];
-  const facts = resultFacts(result);
+  const report = deriveBattleCausalReport(result);
+  const planEntries = [report.policy, ...report.stances];
+  const setupFact = resultFacts(result)[0];
   const resultLabel = outcomeCopy(result.winner);
   const isPressureResult = result.command.encounterId === "pressure_rear";
   const rewards = getEquipmentRewardOptions(result.command.encounterId);
@@ -70,20 +73,52 @@ export function ResultScreen() {
 
       <div className="result-grid">
         <Battlefield units={result.finalUnits} final />
-        <section className="result-facts" aria-labelledby="battle-summary-heading">
-          <span className="eyebrow">Why it happened</span>
-          <h2 id="battle-summary-heading">Battle summary</h2>
-          <div className="fact-list">
-            {facts.map((fact) => (
-              <article className="result-fact" key={fact.label}>
-                <h3>{fact.label}</h3>
-                <p>{fact.text}</p>
-                <button className="text-button" type="button" onClick={() => openInspector(fact.eventId)}>
-                  Show battle detail
+        <section className="result-facts battle-plan-report" aria-labelledby="battle-summary-heading">
+          <span className="eyebrow">Battle report</span>
+          <h2 id="battle-summary-heading">What your plan did</h2>
+          <div className="battle-plan-results">
+            <article className="battle-plan-result battle-setup-result did-trigger">
+              <span className="candidate-section-label">Setup</span>
+              <h3>Starting plan</h3>
+              <p>{setupFact?.text}</p>
+              <button className="text-button" type="button" onClick={() => setupFact && openInspector(setupFact.eventId)}>
+                See the moment
+              </button>
+            </article>
+            {planEntries.map((entry) => (
+              <article
+                className={`battle-plan-result${entry.status === "activated" ? " did-trigger" : " did-not-trigger"}`}
+                key={`${entry.kind}:${entry.id}`}
+              >
+                <span className="candidate-section-label">
+                  {entry.kind === "team_policy" || entry.heroId === null
+                    ? "Team policy"
+                    : unitName(entry.heroId)}
+                </span>
+                <h3>{entry.name}</h3>
+                <p>{entry.ruleText}</p>
+                <strong>
+                  {entry.activationCount > 0
+                    ? `Triggered ${entry.activationCount} ${entry.activationCount === 1 ? "time" : "times"}.`
+                    : "Did not trigger."}
+                </strong>
+                <small className="battle-plan-outcome">
+                  {entry.activationCount > 0 ? "Effect in this battle: " : "Why: "}
+                  {entry.observedOutcome}
+                </small>
+                <button className="text-button" type="button" onClick={() => openInspector(entry.eventId)}>
+                  See the moment
                 </button>
               </article>
             ))}
           </div>
+          <article className="battle-turning-point">
+            <span className="candidate-section-label">Turning point · Round {report.turningPoint.round}</span>
+            <p>{report.turningPoint.text}</p>
+            <button className="text-button" type="button" onClick={() => openInspector(report.turningPoint.eventId)}>
+              See the moment
+            </button>
+          </article>
         </section>
       </div>
 

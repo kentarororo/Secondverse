@@ -60,6 +60,7 @@ export function PrepareScreen() {
   const setStance = useStudioStore((state) => state.setStance);
   const resetPlan = useStudioStore((state) => state.resetPlan);
   const beginBattle = useStudioStore((state) => state.beginBattle);
+  const openCandidateLab = useStudioStore((state) => state.openCandidateLab);
   const muted = useStudioStore((state) => state.muted);
   const reducedMotion = useStudioStore((state) => state.reducedMotion);
   const setMuted = useStudioStore((state) => state.setMuted);
@@ -121,7 +122,10 @@ export function PrepareScreen() {
           <span className="eyebrow">Encounter {encounterId === "pressure_rear" ? "1" : "2"} of 2</span>
           <h1 id="prepare-heading">{encounter.name}</h1>
         </div>
-        <div className="preference-controls" aria-label="Display and sound settings">
+        <div className="preference-controls" aria-label="Preparation actions and settings">
+          <button className="button button-secondary" type="button" onClick={openCandidateLab}>
+            Candidates
+          </button>
           <label className="check-control">
             <input
               type="checkbox"

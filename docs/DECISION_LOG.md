@@ -121,3 +121,25 @@
 - **Human gate:** The owner names at least two candidate rules that activated, connects one to a numerical or status outcome, and says whether they would recruit that candidate.
 - **Economy rule:** Unlimited new candidates remain a lab affordance. Rarity and recruitment cost wait for a run with a real source and sink.
 - **Reversible:** The fixed training fixture, profile conversions, playback timing, and presentation can be tuned without committing the campaign roster or economy.
+
+## 2026-08-08 — Candidate trial human gate promotes its presentation, not its player flow
+
+- **Decision:** Rate the bounded candidate trial **REVISE**. Keep its clearer autobattle/report style and deterministic test harness, but remove a mandatory trial from the intended recruitment flow. Players should compare readable facts and choose; the studio may use the harness to verify those facts.
+- **Owner evidence:** “Idk what you mean by candidate rules,” followed by “this build for the trial was a lot clearer for combat, perhaps this report UI and autobattle style should be replicated for the main game.” The owner also asked why a combat trial would be required for real selection.
+- **Build-discovery evidence:** The owner rerolled until finding Fast Frame + Building Rhythm + Focused Strike + Measured Combo, judged it very strong, and would recruit it while rejecting objectively weaker candidates.
+- **KEEP:** Generated mechanical combinations, visible strength differences, recruitment intent, the trial's battlefield hierarchy, and its concise report.
+- **REVISE:** The umbrella phrase “candidate rules” and the split between a clearer test flow and a denser real flow.
+- **REMOVE from normal path:** A required pre-recruitment combat trial. Retain the controlled simulator as an internal deterministic harness.
+- **Next iteration:** Main-loop Presentation Consolidation will carry the clearer hierarchy into Pressure/Punish without changing authoritative combat or adding Phase 4 economy.
+- **Session rule:** This remains the same owner. Fresh sessions stay 1/5; the Phase 2 exit has not passed.
+
+## 2026-08-08 — Main-loop presentation is consolidated for owner testing
+
+- **Decision:** Keep the completed presentation consolidation for the next owner gate. Normal candidate selection is read-and-choose; the candidate battle remains an internal deterministic harness rather than a required recruitment step.
+- **Player-flow decision:** Remove the visible Candidate trial action and development-facing “candidate rules” framing from the ordinary path. Do not make players fight merely to validate facts the selection card should state clearly.
+- **Combat decision:** Pressure and Punish now use focused causal playback by default. Exact events remain available under **Battle details**, not as the main spectacle.
+- **Report decision:** The result page derives setup, policy, three stance effects, activation counts, exact outcomes, and the turning point only from typed battle facts. Presentation does not invent causes.
+- **QA learning:** A long right-side report must not determine battlefield height, and setup evidence must prove formation as well as policy. Both issues were repaired before handoff.
+- **Evidence:** Typecheck and 173-module build passed; Vitest 120/120; Playwright 33/33 in 3.0 minutes; normal playback 39.7 seconds; independent QA KEEP with no remaining P0–P3 in the repair scope; Pages-style `/Secondverse/` path passed.
+- **Human gate:** The owner must use the normal Pressure/Punish report to identify one plan or stance effect and one exact numerical or status result, then judge whether the separate trial is unnecessary.
+- **Gate rule:** The bounded automated result is KEEP. The whole prototype remains REVISE, fresh sessions remain 1/5, and no economy, full roster replacement, or Phase 4 run structure is authorized by this result.

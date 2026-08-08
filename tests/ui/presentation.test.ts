@@ -241,7 +241,7 @@ describe("battle presentation facts", () => {
     });
   });
 
-  it("uses the typed equipment event as the second encounter plan fact", () => {
+  it("links the second-encounter starting plan to formation and policy evidence", () => {
     const result = simulateBattle({
       ...command,
       encounterId: "punish_front",
@@ -250,7 +250,10 @@ describe("battle presentation facts", () => {
     });
     const planFact = resultFacts(result)[0];
     const source = result.events.find((event) => event.eventId === planFact?.eventId);
-    expect(source?.kind).toBe("equipment_applied");
+    expect(source?.kind).toBe("battle_started");
+    if (source?.kind === "battle_started") {
+      expect(eventFact(source)).toBe("Cy starts in the front slot. Team policy: Cover rear.");
+    }
     expect(planFact?.text).toContain("Front equipment: Quick Shoes.");
     const equipmentIndex = result.events.findIndex((event) => event.kind === "equipment_applied");
     expect(eventUnitDeltas(result, equipmentIndex)).toEqual([

@@ -8,7 +8,7 @@ import { App } from "../../src/App";
 import { useStudioStore } from "../../src/state/studioStore";
 
 function selectFirstCandidateAndStart(): string {
-  fireEvent.click(screen.getByRole("button", { name: "Candidate trial" }));
+  fireEvent.click(screen.getByRole("button", { name: "Candidates" }));
   const firstCard = screen.getAllByRole("article")[0];
   if (!firstCard) throw new Error("Missing first candidate card");
   const name = within(firstCard).getByRole("heading", { level: 2 }).textContent;
@@ -20,11 +20,15 @@ function selectFirstCandidateAndStart(): string {
 
 describe("candidate battle trial journey", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/?harness=candidate-trial");
     window.localStorage.clear();
     useStudioStore.getState().resetLab();
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    window.history.replaceState({}, "", "/");
+  });
 
   it("starts the selected deterministic candidate in a battlefield-first trial", () => {
     render(<App />);
@@ -63,7 +67,7 @@ describe("candidate battle trial journey", () => {
     expect(screen.getAllByText("Battle details")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("button", { name: `Keep ${name} selected` }));
-    expect(screen.getByRole("heading", { name: "Choose a fighter to test" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Choose a fighter" })).toBeInTheDocument();
     expect(useStudioStore.getState().favoriteCandidateId).toBe(
       useStudioStore.getState().candidateTrialResult?.candidate.candidateId,
     );

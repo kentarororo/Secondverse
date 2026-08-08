@@ -151,9 +151,11 @@ function CandidateCard({
 function SelectedCandidateTray({
   candidate,
   onStart,
+  candidateTrialHarnessEnabled,
 }: {
   readonly candidate: CandidateDraft;
   readonly onStart: () => void;
+  readonly candidateTrialHarnessEnabled: boolean;
 }) {
   const signature = findById(CANDIDATE_REGISTRY.signatures, candidate.signatureId);
   const firstTechnique = findById(CANDIDATE_REGISTRY.techniques, candidate.techniqueIds[0]);
@@ -166,39 +168,57 @@ function SelectedCandidateTray({
       aria-label="Selected fighter"
     >
       <div>
-        <span className="eyebrow">Selected for trial</span>
+        <span className="eyebrow">
+          {candidateTrialHarnessEnabled ? "Selected for trial" : "Selected exact build"}
+        </span>
         <strong>{candidate.identity.displayName}</strong>
         <span>
           {signature.name} · {firstTechnique.name} and {secondTechnique.name}
         </span>
       </div>
       <div className="candidate-selection-tray-actions">
-        <p>The trial will use this exact kit. Your current team remains unchanged.</p>
-        <button className="button button-primary" type="button" onClick={onStart}>
-          Start {candidate.identity.displayName}&apos;s trial
-        </button>
+        <p>
+          {candidateTrialHarnessEnabled
+            ? "The trial will use this exact kit. Your current team remains unchanged."
+            : "This exact build stays selected until you choose another fighter or show a new set."}
+        </p>
+        {candidateTrialHarnessEnabled ? (
+          <button className="button button-primary" type="button" onClick={onStart}>
+            Start {candidate.identity.displayName}&apos;s trial
+          </button>
+        ) : null}
       </div>
     </section>
   );
 }
 
-export function CandidateLabScreen() {
+export function CandidateLabScreen({
+  candidateTrialHarnessEnabled = false,
+}: {
+  readonly candidateTrialHarnessEnabled?: boolean;
+}) {
   const roster = useStudioStore((state) => state.candidateRoster);
   const candidateSetNumber = useStudioStore((state) => state.candidateSetNumber);
   const favoriteCandidateId = useStudioStore((state) => state.favoriteCandidateId);
   const chooseCandidate = useStudioStore((state) => state.chooseCandidate);
   const newCandidateSet = useStudioStore((state) => state.newCandidateSet);
   const startCandidateTrial = useStudioStore((state) => state.startCandidateTrial);
+  const returnToPreparation = useStudioStore((state) => state.returnToPreparation);
 
   if (!roster || roster.status === "generation_failed") {
     return (
       <section className="screen recovery-screen candidate-lab-screen">
-        <span className="eyebrow">Candidate trial</span>
+        <span className="eyebrow">Candidates</span>
         <h1>These candidates could not be prepared.</h1>
         <p>Try another generated set. The current battle team is unchanged.</p>
-        <button className="button button-primary" type="button" onClick={newCandidateSet}>
-          Try another set
-        </button>
+        <div className="preference-controls">
+          <button className="button button-secondary" type="button" onClick={returnToPreparation}>
+            Return to team preparation
+          </button>
+          <button className="button button-primary" type="button" onClick={newCandidateSet}>
+            Try another set
+          </button>
+        </div>
       </section>
     );
   }
@@ -220,21 +240,34 @@ export function CandidateLabScreen() {
     <section className="screen candidate-lab-screen" aria-labelledby="candidate-lab-heading">
       <header className="screen-header candidate-lab-header">
         <div>
-          <span className="eyebrow">Candidate trial · Set {candidateSetNumber}</span>
-          <h1 id="candidate-lab-heading">Choose a fighter to test</h1>
+          <span className="eyebrow">Candidate set {candidateSetNumber}</span>
+          <h1 id="candidate-lab-heading">Choose a fighter</h1>
         </div>
-        <button className="button button-secondary" type="button" onClick={newCandidateSet}>
-          Show new candidates
-        </button>
+        <div className="preference-controls">
+          <button className="button button-quiet" type="button" onClick={returnToPreparation}>
+            Return to team preparation
+          </button>
+          <button className="button button-secondary" type="button" onClick={newCandidateSet}>
+            Show new candidates
+          </button>
+        </div>
       </header>
 
       <div className="candidate-scope-note">
-        <strong>Trial selection.</strong>
-        <span>Your selected fighter will enter a real battle trial. Your current three-person team stays unchanged.</span>
+        <strong>{candidateTrialHarnessEnabled ? "Trial harness." : "Choose one build."}</strong>
+        <span>
+          {candidateTrialHarnessEnabled
+            ? "Your selected fighter can enter the internal battle trial. Your current three-person team stays unchanged."
+            : "Compare the exact signature, techniques, stats, advantage, and risk. Your current team stays unchanged."}
+        </span>
       </div>
 
       {favorite ? (
-        <SelectedCandidateTray candidate={favorite} onStart={startCandidateTrial} />
+        <SelectedCandidateTray
+          candidate={favorite}
+          onStart={startCandidateTrial}
+          candidateTrialHarnessEnabled={candidateTrialHarnessEnabled}
+        />
       ) : (
         <p className="candidate-selection-status">Compare each fighter&apos;s signature, techniques, starting stats, and risk before selecting one.</p>
       )}

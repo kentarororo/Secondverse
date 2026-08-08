@@ -24,10 +24,8 @@ test("prepare to readable battle to result to next encounter", async ({ page }) 
   await expect(page.getByRole("button", { name: "Skip to result" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Battle details" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Current moment" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Key moments" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(page.getByRole("button", { name: "Every action" })).toHaveCount(0);
+  await expect(page.getByText(/A round ends after every living fighter has one action/i)).toBeVisible();
   await page.getByRole("button", { name: "Pause battle" }).click();
   await expect(page.getByRole("button", { name: "Resume battle" })).toBeVisible();
   await page.screenshot({ path: "test-results/evidence/battle-desktop.png", fullPage: true });
@@ -61,9 +59,11 @@ test("prepare to readable battle to result to next encounter", async ({ page }) 
 
   await page.getByRole("button", { name: "Skip to result" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /^Result:/ })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText("Plan");
-  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText("Turning point");
-  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText("Battle result");
+  const report = page.getByRole("region", { name: "What your plan did" });
+  await expect(report).toContainText("Starting plan");
+  await expect(report).toContainText("Team policy");
+  await expect(report).toContainText("Turning point");
+  await expect(report.locator(".battle-plan-result")).toHaveCount(5);
   await expect(page.getByRole("heading", { name: "Battle details" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/evidence/result-desktop.png", fullPage: true });
 
@@ -100,16 +100,17 @@ test("formation and team policy produce a visible, traceable result change", asy
   const changedOutcome = await page.getByRole("region", { name: "Battle totals" }).innerText();
   expect(changedFormation).not.toBe(baselineFormation);
   expect(changedOutcome).not.toBe(baselineOutcome);
-  const summary = page.getByRole("region", { name: "Battle summary" });
-  const planFact = summary.locator(".result-fact").filter({
-    has: page.getByRole("heading", { level: 3, name: "Plan" }),
+  const summary = page.getByRole("region", { name: "What your plan did" });
+  const planFact = summary.locator(".battle-setup-result");
+  const policyFact = summary.locator(".battle-plan-result").filter({
+    has: page.getByRole("heading", { level: 3, name: "Cover rear" }),
   });
-  const turningPointFact = summary.locator(".result-fact").filter({
-    has: page.getByRole("heading", { level: 3, name: "Turning point" }),
-  });
+  const turningPointFact = summary.locator(".battle-turning-point");
   await expect(planFact.locator("p")).toHaveText(
     "Cy starts in the front slot. Team policy: Cover rear.",
   );
+  await expect(policyFact).toContainText(/Triggered \d+ (time|times)\./);
+  await expect(policyFact).toContainText(/Effect in this battle:/);
   await expect(turningPointFact.locator("p")).toHaveText(
     "Turning point: Ada intercepts the marked rear hit.",
   );

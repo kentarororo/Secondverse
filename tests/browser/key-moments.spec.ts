@@ -36,7 +36,7 @@ async function chooseKeyMomentStances(page: Page): Promise<void> {
   await page.getByRole("radio", { name: /Aid two.*up to two injured allies/i }).check();
 }
 
-test("Key moments is default and detail changes restart safely without changing raw outcome", async ({
+test("focused Key moments keeps every raw event available without changing the outcome", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -44,10 +44,9 @@ test("Key moments is default and detail changes restart safely without changing 
   await openFreshLab(page);
   await page.getByRole("button", { name: "Start battle" }).click();
 
-  const key = page.getByRole("button", { name: "Key moments" });
-  const every = page.getByRole("button", { name: "Every action" });
-  await expect(key).toHaveAttribute("aria-pressed", "true");
-  await expect(every).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Key moments" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Every action" })).toHaveCount(0);
+  await expect(page.getByText(/A round ends after every living fighter has one action/i)).toBeVisible();
   await page.getByRole("button", { name: "Pause battle" }).click();
 
   const firstKeyHeading = await momentHeading(page).innerText();
@@ -60,19 +59,6 @@ test("Key moments is default and detail changes restart safely without changing 
     "aria-label",
     /.+\..+\./,
   );
-
-  await every.click();
-  await expect(every).toHaveAttribute("aria-pressed", "true");
-  const everyHeading = await momentHeading(page).innerText();
-  expect(everyHeading).toMatch(/^Moment 1 of \d+$/);
-  expect(momentCount(everyHeading)).toBeGreaterThan(keyCount);
-  await expect(page.locator(".battle-fact-strip")).toContainText(
-    /Review every action and number from this moment/i,
-  );
-
-  await key.click();
-  await expect(key).toHaveAttribute("aria-pressed", "true");
-  expect(await momentHeading(page).innerText()).toBe(firstKeyHeading);
 
   const initialMoment = await momentHeading(page).innerText();
   const startedAt = Date.now();
@@ -92,8 +78,6 @@ test("Key moments is default and detail changes restart safely without changing 
 
   await page.getByRole("button", { name: "Change plan and replay" }).click();
   await page.getByRole("button", { name: "Start battle" }).click();
-  await every.click();
-  await expect(every).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Skip to result" }).click();
   expect(await page.getByRole("region", { name: "Battle totals" }).innerText()).toBe(keyOutcome);
   expect(await exactEventsText(page)).toBe(keyEvents);
@@ -116,7 +100,7 @@ test("plan tracker keeps all three chosen stances visible through routine compre
   });
 
   await page.getByRole("button", { name: "Start battle" }).click();
-  const tracker = page.getByRole("region", { name: "Plan tracker" });
+  const tracker = page.getByRole("region", { name: "Your plan in action" });
   await expect(tracker.locator(".plan-track-item")).toHaveCount(3);
   for (const [name, stance] of [
     ["Ada", "Brace early"],
@@ -203,7 +187,7 @@ test("in-app reduced motion preserves moment facts, reading hold, and authoritat
     "aria-label",
     /.+\..+\./,
   );
-  await expect(page.getByRole("region", { name: "Plan tracker" }).locator(".plan-track-item"))
+  await expect(page.getByRole("region", { name: "Your plan in action" }).locator(".plan-track-item"))
     .toHaveCount(3);
   await page.screenshot({
     path: "test-results/evidence/key-moments-reduced-motion-desktop.png",

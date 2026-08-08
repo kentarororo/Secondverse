@@ -62,12 +62,12 @@ test.describe("desktop presentation", () => {
     }).click();
     await page.getByRole("button", { name: "Pause battle" }).click();
     await expect(page.getByRole("region", { name: "Current moment" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Plan tracker" }).locator(".plan-track-item"))
+    await expect(page.getByRole("region", { name: "Your plan in action" }).locator(".plan-track-item"))
       .toHaveCount(3);
     await expectNoHorizontalPageScroll(page);
     await expectNoOverlap(
       page.getByRole("region", { name: "Current moment" }),
-      page.getByRole("region", { name: "Plan tracker" }),
+      page.getByRole("region", { name: "Your plan in action" }),
       "125% current moment and plan tracker must not overlap",
     );
     failures.assertNone();
@@ -212,14 +212,14 @@ test.describe("mobile presentation", () => {
     );
     await expect(page.locator(".battle-screen")).toBeVisible();
     await expect(page.getByRole("region", { name: "Current moment" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Plan tracker" }).locator(".plan-track-item"))
+    await expect(page.getByRole("region", { name: "Your plan in action" }).locator(".plan-track-item"))
       .toHaveCount(3);
     await expectNoHorizontalPageScroll(page);
     await expect(page.locator("img.combat-sprite")).toHaveCount(0);
     await page.getByRole("button", { name: "Pause battle" }).click();
     await expectNoOverlap(
       page.getByRole("region", { name: "Current moment" }),
-      page.getByRole("region", { name: "Plan tracker" }),
+      page.getByRole("region", { name: "Your plan in action" }),
       "mobile current moment and plan tracker must not overlap",
     );
     await page.screenshot({

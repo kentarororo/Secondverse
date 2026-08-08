@@ -63,9 +63,7 @@ async function pauseOnStatusAtGroupedMoment(
   );
   await expect(page.getByRole("button", { name: "Resume battle" })).toBeVisible();
   await expect(status).toBeVisible();
-  await expect(page.locator(".battle-fact-strip")).toContainText(
-    /Review every action and number from this moment/i,
-  );
+  await expect(page.getByRole("button", { name: "Battle details" })).toBeVisible();
 }
 
 async function exactEventsText(page: Page): Promise<string> {

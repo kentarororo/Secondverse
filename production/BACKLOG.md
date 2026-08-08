@@ -72,8 +72,14 @@ Backlog order follows player risk, not production breadth.
 - [x] Build the smallest controlled fight for one selected generated candidate with two fixed partners and three fixed opponents.
 - [x] Emit exact structured trigger and mutation events for every candidate Signature, Advantage, Risk, and technique used by the trial.
 - [x] Prove deterministic replay, provenance, all 36 core builds, 300 generated candidates, battle termination, causal reporting, and truthful card-to-battle copy.
-- [ ] Run the human combat-trial gate: name two activated candidate rules, connect one to a numerical/status result, and decide whether to recruit.
+- [x] Run the human combat-trial gate: recruitment intent and a strong generated combination passed; “candidate rules” comprehension and exact rule-to-number explanation did not.
 - [x] Keep full roster replacement, currency/economy, large content expansion, and an art batch outside the combat trial.
+- [x] Record candidate trial human verdict REVISE: keep its battle/report clarity and internal harness; remove it from the intended recruitment path.
+- [x] Remove Candidate trial from normal player navigation while retaining deterministic internal coverage.
+- [x] Carry the trial's battlefield-first and concise causal-report hierarchy into the authored Pressure/Punish flow.
+- [x] Replace or remove development-facing umbrella language instead of teaching “candidate rules.”
+- [x] Prove authored commands, simulation outcomes, saves, and existing planning leverage are unchanged.
+- [ ] Run the main-loop presentation human gate: identify one plan/build effect, connect it to an exact number/status, and confirm the separate trial is unnecessary.
 
 ## LATER — gated work
 

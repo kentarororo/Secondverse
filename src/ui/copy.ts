@@ -12,8 +12,6 @@ export const UI_COPY = {
   resumeBattle: "Resume battle",
   skipResult: "Skip to result",
   exactEvents: "Battle details",
-  keyMoments: "Key moments",
-  everyAction: "Every action",
   closeExactEvents: "Close battle details",
   reducedMotion: "Reduced motion",
   result: "Result",

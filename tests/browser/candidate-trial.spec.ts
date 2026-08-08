@@ -6,7 +6,7 @@ import {
 } from "./helpers";
 
 async function selectCandidateAndStart(page: Page, index = 0): Promise<string> {
-  await page.getByRole("button", { name: "Candidate trial" }).click();
+  await page.getByRole("button", { name: "Candidates" }).click();
   const card = page.locator(".candidate-card").nth(index);
   const name = await card.getByRole("heading", { level: 2 }).innerText();
   await card.getByRole("button", { name: `Select ${name}` }).click();
@@ -19,7 +19,7 @@ test.describe("fielded candidate trial", () => {
 
   test("selected candidate reaches a battlefield and exact kit report", async ({ page }) => {
     const failures = collectPageFailures(page);
-    await openFreshLab(page);
+    await openFreshLab(page, "./?harness=candidate-trial");
     const name = await selectCandidateAndStart(page);
 
     await expect(page.getByRole("heading", { name: `${name}'s battle trial` })).toBeVisible();
@@ -58,7 +58,7 @@ test.describe("fielded candidate trial", () => {
     test.setTimeout(45_000);
     const failures = collectPageFailures(page);
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await openFreshLab(page);
+    await openFreshLab(page, "./?harness=candidate-trial");
     await selectCandidateAndStart(page, 1);
 
     await expect(page.getByRole("checkbox", { name: "Reduced motion" })).toBeChecked();
@@ -75,7 +75,7 @@ test.describe("fielded candidate trial mobile", () => {
 
   test("the selection, battlefield, and result remain reachable without horizontal scroll", async ({ page }) => {
     const failures = collectPageFailures(page);
-    await openFreshLab(page);
+    await openFreshLab(page, "./?harness=candidate-trial");
     const name = await selectCandidateAndStart(page, 2);
 
     await expect(page.getByRole("heading", { name: `${name}'s battle trial` })).toBeVisible();

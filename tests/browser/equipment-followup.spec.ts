@@ -26,7 +26,7 @@ async function resultSnapshot(page: Page): Promise<string> {
     await page.getByRole("region", { name: "Battle totals" }).innerText(),
     await page.getByRole("region", { name: "Your formation" }).innerText(),
     await page.getByRole("region", { name: "Enemy formation" }).innerText(),
-    await page.getByRole("region", { name: "Battle summary" }).innerText(),
+    await page.getByRole("region", { name: "What your plan did" }).innerText(),
   ].join("\n---\n");
 }
 
@@ -88,7 +88,7 @@ test("confirmed Heavy Pad is truthful in Punish preparation and authoritative ex
   await skipBattleToResult(page);
   const equipmentFact =
     "Ada starts in the front slot with Heavy Pad. Guard +18; Speed 10 to 7 (-3).";
-  await expect(page.getByRole("region", { name: "Battle summary" })).toContainText(
+  await expect(page.getByRole("region", { name: "What your plan did" })).toContainText(
     "Bo starts Bruised.",
   );
   await page.screenshot({ path: "test-results/evidence/punish-result-heavy-desktop.png", fullPage: true });

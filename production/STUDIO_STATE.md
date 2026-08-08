@@ -2,12 +2,12 @@
 
 **Updated:** 2026-08-08
 **Phase:** 2 — Combat Laboratory  
-**Repository:** Branch `codex/reimagine-core-loop`; baseline HEAD/origin `5f47116`; current iteration uncommitted.
-**Status:** Seeded Candidate Draft Lab KEEP; Single-Candidate Combat Trial automated KEEP and READY FOR OWNER PLAYTEST; Key Moments KEEP WITH LIMITATION; whole prototype REVISE — functional but flat; fresh sessions remain 1/5
+**Repository:** Branch `codex/reimagine-core-loop`; baseline HEAD `01cf834`; current iteration uncommitted.
+**Status:** Candidate discovery KEEP; candidate trial human REVISE; Main-loop Presentation Consolidation AUTOMATED KEEP — READY FOR OWNER PLAYTEST; whole prototype REVISE; fresh sessions remain 1/5
 
 ## Highest-risk unanswered player-experience question
 
-Will one selected generated candidate produce a visible, causal kit identity when its card promises are executed in a controlled fight?
+Will the clearer candidate-trial battle and report hierarchy make the real two-encounter loop easier to understand without adding a mandatory trial before recruitment?
 
 ## Completed iteration — First Encounter Pair Foundation
 
@@ -109,7 +109,7 @@ Will one selected generated candidate produce a visible, causal kit identity whe
 - **Gate discipline:** This was the same owner, so fresh sessions remain 1/5 and the Phase 2 exit has not passed. Candidates remain outside the campaign roster.
 - **Next highest-risk question:** Can a selected candidate's promised mechanics read clearly when executed in combat?
 
-## Current iteration — Single-Candidate Combat Trial
+## Completed human gate — Single-Candidate Combat Trial
 
 - **Player problem:** Candidate cards promise distinct mechanics, but those promises are not yet executable or fieldable.
 - **Falsifiable hypothesis:** If one selected generated hero enters a controlled fight, the player will see a causal kit identity rather than only reading a comparison card.
@@ -117,22 +117,36 @@ Will one selected generated candidate produce a visible, causal kit identity whe
 - **Explicit exclusions:** No full campaign roster replacement, currency or economy, large content expansion, or art batch.
 - **Human success criteria:** The owner names at least two candidate rules that activated, connects one rule to a numerical or status outcome, and says whether they would recruit that candidate.
 - **Automated protection:** Deterministic replay and provenance validation; exact structured trigger and mutation events; all 36 core builds; 300 generated candidates from 100 seeds; battle termination; causal presentation regressions; desktop, mobile, reduced-motion, keyboard, and complete browser journeys; truthful UI copy; no `Math.random`.
-- **Result:** **AUTOMATED KEEP — READY FOR OWNER PLAYTEST.** The controlled trial, six-unit battlefield, typed rule tracker, exact kit report, and visual placeholder seam are complete. Independent QA found no remaining P0–P3 issue after causal summaries were narrowed to their true descendants and the mobile activation ribbon was docked below the battlefield. Human recruitment intent remains unproven.
+- **Result:** **REVISE.** Keep the clearer battlefield/report presentation and the deterministic harness. Remove the trial from the intended recruitment path. The owner did not understand the umbrella phrase “candidate rules” or provide one exact rule-to-number explanation, so that language/comprehension claim did not pass. However, the owner independently assembled Fast Frame + Building Rhythm + Focused Strike + Measured Combo, judged the combination very strong, and would recruit it while rejecting weaker candidates. Build discovery and recruitment intent passed.
 - **Evidence:** Typecheck and 172-module production build passed; Vitest 115/115 passed; focused candidate-trial Playwright 3/3 and final full Playwright 33/33 passed; all 36 core builds and 300 candidates terminated; Measured Combo reports only its Points gain; Shared Strain reports only its Strain and directly caused Broken chain; mobile ribbon overlaps 0/6 fighter cards.
-- **Next highest-risk question:** Whether a generated candidate's card promises survive contact with the battlefield and create recruitment intent.
+- **Next highest-risk question:** Whether the clearer presentation survives contact with the real two-encounter loop and its formation, stance, equipment, enemy-rule, and injury facts.
 
-## Implemented trial boundaries
+## Current iteration — Main-loop Presentation Consolidation
 
-- Candidate-to-combat command and controlled fixture boundary are isolated from the authored encounter pair.
-- Candidate rule resolution emits exact structured trigger and mutation events.
-- Battlefield and result presentation render generated rules and outcomes without inventing facts.
-- Deterministic replay, termination, generated coverage, causal summaries, and browser journeys are protected.
+- **Player problem:** The clearest autobattle and report UI exists in a studio-only candidate trial, while the intended two-encounter player loop still carries the older, denser presentation.
+- **Falsifiable hypothesis:** If the real Pressure/Punish flow adopts the trial's battlefield-first hierarchy and concise causal report, the player will explain a decisive plan effect without Exact events and will not need a separate pre-recruitment combat trial.
+- **Playable scope:** Remove Candidate trial from normal navigation; keep it as an internal deterministic harness; reuse the clearest trial presentation patterns in the authored battle and result flow; rename or remove development language rather than teaching “candidate rules”; preserve all current formation, stance, equipment, Bruised, save, and combat behavior.
+- **Explicit exclusions:** No run currency, recruitment transaction, full generated roster replacement, new encounters, simulation rebalance, art batch, campaign, or new narrative system.
+- **Human success criteria:** In the normal Pressure/Punish loop, the owner identifies one chosen plan or hero build effect, connects it to one exact number or status in the report, and says the separate trial is no longer needed in the player flow.
+- **Automated protection:** Main simulation and command equality; complete prepare–battle–result–next-fight journey; causal report facts; no Candidate trial entry in normal navigation; internal candidate-trial determinism remains covered; desktop, mobile, reduced motion, keyboard, save/reload, and GitHub Pages path.
+- **Implementation result:** The normal Candidates page is read-and-choose only. The controlled candidate fight remains reachable through the internal `?harness=candidate-trial` route for deterministic studio checks. Pressure and Punish now use focused battle playback, keep exact events behind **Battle details**, and end with a typed **What your plan did** report for setup, policy, all three stances, and the turning point.
+- **Automated evidence:** Strict typecheck and the 173-module production build passed; Vitest passed 120/120; full Playwright passed 33/33 in 3.0 minutes; normal playback took 39.7 seconds; the GitHub Pages-style `/Secondverse/` path passed; authoritative source contains no `Math.random`.
+- **Independent QA:** Initial REVISE found a stretched desktop result battlefield and a Starting plan link that repeated policy evidence. After repair, QA returned KEEP: all six fighters fit in the opening desktop and mobile views, no horizontal overflow remained, and Starting plan now links to distinct typed formation + policy evidence.
+- **Result:** **AUTOMATED KEEP — READY FOR OWNER PLAYTEST.** This proves truthful presentation and complete journeys, not player comprehension or renewed desire to replay. The whole prototype remains REVISE and Phase 2 remains open at 1/5 fresh sessions.
+- **Next highest-risk question:** Whether readable main-loop combat creates enough confidence to begin the smallest Phase 4 recruitment/run decision without hiding unresolved Phase 2 fresh-session evidence.
+
+## Likely files and systems at risk
+
+- Normal navigation and Candidate Lab entry actions
+- Authored BattleScreen, UnitCard/stage hierarchy, Key Moments selection, and ResultScreen report hierarchy
+- Shared plain-language presentation helpers and CSS tokens
+- Existing browser journeys plus internal candidate-trial coverage
 
 ## Session protocol check
 
 - Required files inspected: absent at start; created in this session.
 - Repository and test state inspected: strict app, simulation, save boundary, and browser suite are present and green.
-- Implementation state: the authored encounter pair, Key Moments Playback, candidate draft lab, plain-language repair, and Single-Candidate Combat Trial are playable. The current iteration waits only on the owner combat-trial gate.
+- Implementation state: the authored encounter pair, Key Moments Playback, candidate draft lab, and controlled trial are playable. The current iteration promotes the clearer trial presentation into the real loop and removes the trial from normal player navigation.
 - Branch target: `codex/reimagine-core-loop`.
 - Taste comparison prepared: `docs/COMBAT_PRESENTATION_COMPARISON.md` now fixes the shared information hierarchy, encounter-pair question, direction-independent accessibility rules, and timing ranges without choosing the owner-owned presentation identity.
 - Language constraint: plain and mechanical; no bombastic vocabulary.

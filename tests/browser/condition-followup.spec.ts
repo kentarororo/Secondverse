@@ -120,10 +120,8 @@ test("confirmed equipment and Bruised persist into Punish and produce an authori
   });
 
   await page.getByRole("button", { name: "Skip to result" }).click();
-  const changed = page.getByRole("region", { name: "Battle summary" });
-  const planFact = changed.locator(".result-fact").filter({
-    has: page.getByRole("heading", { level: 3, name: "Plan" }),
-  });
+  const changed = page.getByRole("region", { name: "What your plan did" });
+  const planFact = changed.locator(".battle-setup-result");
   await expect(planFact.locator("p")).toContainText("Bo starts Bruised.");
   await page.getByRole("button", { name: "Battle details" }).click();
   await expect(page.getByRole("complementary", { name: "Battle details" }).locator("li").filter({
@@ -202,7 +200,7 @@ test("Ada in middle with Cover rear avoids injury and carries no condition into 
   });
 
   await skipBattleToResult(page);
-  await expect(page.getByRole("region", { name: "Battle summary" })).not.toContainText(
+  await expect(page.getByRole("region", { name: "What your plan did" })).not.toContainText(
     "starts Bruised",
   );
   await page.getByRole("button", { name: "Battle details" }).click();

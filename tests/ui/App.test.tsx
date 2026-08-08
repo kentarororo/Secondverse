@@ -67,9 +67,11 @@ describe("combat lab journey", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Skip to result" }));
     expect(screen.getByRole("heading", { name: /Result: (Win|Loss|Draw)/ })).toHaveFocus();
-    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Turning point" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Battle result" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What your plan did" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Starting plan" })).toBeInTheDocument();
+    expect(screen.getAllByText(/Triggered \d+ (time|times)\.|Did not trigger\./).length)
+      .toBeGreaterThanOrEqual(4);
+    expect(screen.getByText(/Turning point · Round \d+/)).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Aftermath" })).toHaveTextContent(
       "Bo is Bruised. This hero was knocked out and starts the next battle with Max HP reduced from 84 to 72.",
     );
@@ -78,39 +80,24 @@ describe("combat lab journey", () => {
     expect(useStudioStore.getState().focusedEventId).toBe(sourceEventId);
   });
 
-  it("starts in Key moments, offers grouped Every action playback, and shows all three stances", () => {
+  it("uses focused Key moments, explains timing, and shows all three chosen stances", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Start battle" }));
 
-    expect(screen.getByRole("button", { name: "Key moments" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: "Every action" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
+    expect(screen.queryByRole("button", { name: "Key moments" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Every action" })).not.toBeInTheDocument();
+    expect(screen.getByText(/A round ends after every living fighter has one action/i))
+      .toBeInTheDocument();
+    expect(screen.getAllByText("Setup", { exact: true }).length).toBeGreaterThan(0);
     expect(screen.getByRole("region", { name: "Current moment" })).toHaveTextContent(
       "Key moment 1 of",
     );
-    const tracker = screen.getByRole("region", { name: "Plan tracker" });
+    const tracker = screen.getByRole("region", { name: "Your plan in action" });
     expect(within(tracker).getAllByRole("listitem")).toHaveLength(3);
     expect(tracker).toHaveTextContent("AdaBrace under pressureNot used yet");
     expect(tracker).toHaveTextContent("BoHit frontNot used yet");
     expect(tracker).toHaveTextContent("CyAid oneNot used yet");
-
-    const result = useStudioStore.getState().result;
-    expect(result).not.toBeNull();
-    if (!result) return;
-    fireEvent.click(screen.getByRole("button", { name: "Every action" }));
-    expect(screen.getByRole("button", { name: "Every action" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByRole("region", { name: "Current moment" })).toHaveTextContent(
-      `Moment 1 of ${result.actionCount + 2}`,
-    );
-    expect(useStudioStore.getState().playbackCursor).toBe(0);
+    expect(screen.getByRole("button", { name: "Battle details" })).toBeInTheDocument();
   });
 
   it("advances the raw cursor to grouped moment ends and keeps the causal summary in reduced motion", () => {

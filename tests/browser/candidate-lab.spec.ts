@@ -1,10 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   collectPageFailures,
-  confirmEquipment,
   expectNoHorizontalPageScroll,
   openFreshLab,
-  skipBattleToResult,
   tabTo,
 } from "./helpers";
 
@@ -81,12 +79,12 @@ test.describe("candidate draft desktop", () => {
     expect(planBeforeCandidates).toMatch(/Cy starts in the front slot.*Team policy: Cover rear/i);
     await expectNoHorizontalPageScroll(page);
 
-    await page.getByRole("button", { name: "Candidate trial" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Choose a fighter to test" }))
+    await page.getByRole("button", { name: "Candidates" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Choose a fighter" }))
       .toBeVisible();
-    await expect(page.getByText("Trial selection.", { exact: true })).toBeVisible();
-    await expect(page.getByText(/will enter a real battle trial/i)).toBeVisible();
-    await expect(page.getByText(/current three-person team stays unchanged/i)).toBeVisible();
+    await expect(page.getByText("Candidate set 1", { exact: true })).toBeVisible();
+    await expect(page.getByText(/current team stays unchanged/i)).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/trial/i);
     const firstCards = await expectStructuredCandidateCards(page);
     const firstBuildIds = await candidateBuildIds(firstCards);
     await expectNoHorizontalPageScroll(page);
@@ -101,18 +99,19 @@ test.describe("candidate draft desktop", () => {
     });
     await chooseFirst.click();
     await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
-      `Selected for trial${firstName}`,
+      `Selected exact build${firstName}`,
     );
     await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
-      "The trial will use this exact kit.",
+      "This exact build stays selected",
     );
+    await expect(page.getByRole("button", { name: /trial/i })).toHaveCount(0);
     await expect(firstCards.first()).toHaveClass(/is-selected/);
     await expect(firstCards.first().locator('button[aria-pressed="true"]')).toHaveAccessibleName(
       `${firstName} selected`,
     );
 
     await page.getByRole("button", { name: "Show new candidates" }).click();
-    await expect(page.getByText("Candidate trial · Set 2", { exact: true })).toBeVisible();
+    await expect(page.getByText("Candidate set 2", { exact: true })).toBeVisible();
     const secondCards = await expectStructuredCandidateCards(page);
     expect(await candidateBuildIds(secondCards)).not.toEqual(firstBuildIds);
     await expect(page.getByRole("status")).toHaveCount(0);
@@ -123,31 +122,11 @@ test.describe("candidate draft desktop", () => {
       fullPage: true,
     });
 
-    await page.getByRole("button", { name: "Battle preparation" }).click();
+    await page.getByRole("button", { name: "Return to team preparation" }).click();
     expect(await page.locator(".plan-summary").innerText()).toBe(planBeforeCandidates);
+    await expect(page.getByRole("navigation", { name: "Lab sections" })).toHaveCount(0);
     await expect(page.locator("body")).not.toContainText(FORBIDDEN_EQUIPMENT_PHRASE);
     await expectNoHorizontalPageScroll(page);
-
-    await skipBattleToResult(page);
-    const summary = page.getByRole("region", { name: "Battle summary" });
-    await expect(summary).toContainText("Plan");
-    await expect(summary).toContainText("Turning point");
-    await expect(summary).toContainText("Battle result");
-    for (const paragraph of await summary.locator("p").all()) {
-      await expect(paragraph).toHaveText(/[.!?]$/);
-    }
-    await expect(page.getByRole("region", { name: "Aftermath" }).locator("p"))
-      .toHaveText(/[.!?]$/);
-    await expect(page.locator("body")).not.toContainText(FORBIDDEN_EQUIPMENT_PHRASE);
-
-    await confirmEquipment(page, "Heavy Pad");
-    await page.getByRole("button", { name: "Next encounter" }).click();
-    const equipment = page.getByRole("region", { name: "Front equipment" });
-    await expect(equipment).toContainText(
-      /Cy starts in the front slot with Guard \+18 and Speed -3 from Heavy Pad\./i,
-    );
-    await expect(equipment).not.toContainText(FORBIDDEN_EQUIPMENT_PHRASE);
-    await expect(page.locator("body")).not.toContainText(FORBIDDEN_EQUIPMENT_PHRASE);
     failures.assertNone();
   });
 
@@ -155,10 +134,10 @@ test.describe("candidate draft desktop", () => {
     const failures = collectPageFailures(page);
     await openFreshLab(page);
 
-    const candidateTrial = page.getByRole("button", { name: "Candidate trial" });
-    await tabTo(page, candidateTrial);
+    const candidates = page.getByRole("button", { name: "Candidates" });
+    await tabTo(page, candidates);
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("heading", { name: "Choose a fighter to test" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Choose a fighter" })).toBeVisible();
 
     const firstChoose = page.locator(".candidate-card").first().getByRole("button", {
       name: /^Select /,
@@ -166,7 +145,7 @@ test.describe("candidate draft desktop", () => {
     await tabTo(page, firstChoose, 60);
     await page.keyboard.press("Enter");
     await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
-      "Selected for trial",
+      "Selected exact build",
     );
     await expect(page.locator(".candidate-card").first().locator('button[aria-pressed="true"]'))
       .toHaveAccessibleName(/ selected$/);
@@ -174,7 +153,7 @@ test.describe("candidate draft desktop", () => {
     const newSet = page.getByRole("button", { name: "Show new candidates" });
     await tabTo(page, newSet, 60);
     await page.keyboard.press("Enter");
-    await expect(page.getByText("Candidate trial · Set 2", { exact: true })).toBeVisible();
+    await expect(page.getByText("Candidate set 2", { exact: true })).toBeVisible();
     await expect(page.getByRole("status")).toHaveCount(0);
     await expectNoHorizontalPageScroll(page);
     failures.assertNone();
@@ -189,14 +168,14 @@ test.describe("candidate draft mobile and reduced motion", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openFreshLab(page);
     await expect(page.getByRole("checkbox", { name: "Reduced motion" })).toBeChecked();
-    await page.getByRole("button", { name: "Candidate trial" }).click();
+    await page.getByRole("button", { name: "Candidates" }).click();
 
     const cards = await expectStructuredCandidateCards(page);
     await expectNoHorizontalPageScroll(page);
     const thirdName = await cards.nth(2).getByRole("heading", { level: 2 }).innerText();
     await cards.nth(2).getByRole("button", { name: `Select ${thirdName}` }).click();
     await expect(page.getByRole("status", { name: "Selected fighter" })).toContainText(
-      `Selected for trial${thirdName}`,
+      `Selected exact build${thirdName}`,
     );
     await page.screenshot({
       path: "test-results/evidence/candidate-lab-mobile-reduced.png",
@@ -204,7 +183,7 @@ test.describe("candidate draft mobile and reduced motion", () => {
     });
 
     await page.getByRole("button", { name: "Show new candidates" }).click();
-    await expect(page.getByText("Candidate trial · Set 2", { exact: true })).toBeVisible();
+    await expect(page.getByText("Candidate set 2", { exact: true })).toBeVisible();
     await expect(page.getByRole("status")).toHaveCount(0);
     await expectNoHorizontalPageScroll(page);
     await expect(page.locator("body")).not.toContainText(FORBIDDEN_EQUIPMENT_PHRASE);

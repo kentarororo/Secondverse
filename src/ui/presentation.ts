@@ -841,8 +841,10 @@ export function resultFacts(result: BattleResult): readonly {
   const condition = result.command.plan.priorCondition
     ? ` ${unitName(result.command.plan.priorCondition.heroId)} starts Bruised.`
     : "";
+  const battleStart = result.events.find((event) => event.kind === "battle_started");
+  if (!battleStart) throw new Error("Missing battle-start event for result plan evidence");
   const definitions = [
-    ["Plan", result.highlights.planEventId, `${front} starts in the front slot. Team policy: ${policy}.${equipment}${condition}`],
+    ["Plan", battleStart.eventId, `${front} starts in the front slot. Team policy: ${policy}.${equipment}${condition}`],
     ["Turning point", result.highlights.turningPointEventId, null],
     ["Battle result", result.highlights.outcomeEventId, null],
   ] as const;

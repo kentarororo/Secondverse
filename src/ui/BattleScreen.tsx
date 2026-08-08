@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ENCOUNTERS } from "../content";
 import { useCombatLabRepository } from "../state/repositoryContext";
 import { useStudioStore } from "../state/studioStore";
@@ -9,7 +9,6 @@ import { EventInspector } from "./EventInspector";
 import {
   momentDurationMs,
   selectPlaybackMoments,
-  type MomentPlaybackMode,
 } from "./moments";
 import {
   combatFeedbackForMoment,
@@ -36,12 +35,11 @@ export function BattleScreen() {
   const openInspector = useStudioStore((state) => state.openInspector);
   const showResult = useStudioStore((state) => state.showResult);
   const replayToPrepare = useStudioStore((state) => state.replayToPrepare);
-  const [playbackMode, setPlaybackMode] = useState<MomentPlaybackMode>("key");
   const lastCuedMomentId = useRef<string | null>(null);
 
   const playback = useMemo(
-    () => (result ? selectPlaybackMoments(result, playbackMode) : []),
-    [playbackMode, result],
+    () => (result ? selectPlaybackMoments(result, "key") : []),
+    [result],
   );
   const finalCursor = Math.max(0, (result?.events.length ?? 1) - 1);
   const cursor = Math.min(playbackCursor, finalCursor);
@@ -111,18 +109,14 @@ export function BattleScreen() {
   const signature = currentMoment.focusKind === "signature";
   const decisive = currentMoment.focusKind === "decisive";
   const eventClass = decisive ? "event-decisive" : signature ? "event-signature" : "event-normal";
+  const actionNumber = result.events
+    .slice(0, currentMoment.endEventIndex + 1)
+    .filter((event) => event.kind === "action_started").length;
 
   const skipToResult = () => {
     setPlaying(false);
     setPlaybackCursor(result.events.length - 1);
     showResult(repository ?? undefined);
-  };
-
-  const changePlaybackMode = (mode: MomentPlaybackMode) => {
-    if (mode === playbackMode) return;
-    setPlaybackMode(mode);
-    setPlaybackCursor(0);
-    lastCuedMomentId.current = null;
   };
 
   return (
@@ -132,7 +126,11 @@ export function BattleScreen() {
     >
       <header className="battle-header">
         <div className="battle-title">
-          <span className="eyebrow">Battle · Round {currentMoment.round}</span>
+          <span className="eyebrow">
+            {currentMoment.kind === "setup"
+              ? "Setup"
+              : `Round ${currentMoment.round} · Action ${actionNumber}`}
+          </span>
           <h1 id="battle-heading">{encounter.name}</h1>
         </div>
         <div className="battle-controls" aria-label="Playback controls">
@@ -170,19 +168,11 @@ export function BattleScreen() {
           <strong>{UI_COPY.enemyRule}</strong>
           <span>{encounter.tell}</span>
         </div>
-        <div className="playback-mode-control" role="group" aria-label="Battle playback">
-          {(["key", "all"] as const).map((mode) => (
-            <button
-              className={`button button-control${playbackMode === mode ? " is-active" : ""}`}
-              type="button"
-              aria-pressed={playbackMode === mode}
-              onClick={() => changePlaybackMode(mode)}
-              key={mode}
-            >
-              {mode === "key" ? UI_COPY.keyMoments : UI_COPY.everyAction}
-            </button>
-          ))}
-        </div>
+      </div>
+
+      <div className="battle-timing-note">
+        <strong>How timing works</strong>
+        <span>A round ends after every living fighter has one action. An action is one fighter acting.</span>
       </div>
 
       <div className="battle-stage">
@@ -218,7 +208,7 @@ export function BattleScreen() {
             <div>
               <span className="eyebrow">{summary.label}</span>
               <strong>
-                {playbackMode === "key" ? "Key moment" : "Moment"} {playbackIndex + 1} of {playback.length}
+                Key moment {playbackIndex + 1} of {playback.length}
               </strong>
             </div>
             {currentEntry.routineActionsAdvanced > 0 ? (
@@ -239,7 +229,7 @@ export function BattleScreen() {
         <section className="plan-tracker" aria-labelledby="plan-tracker-heading">
           <div className="plan-tracker-heading">
             <span className="eyebrow">Chosen stances</span>
-            <h2 id="plan-tracker-heading">Plan tracker</h2>
+            <h2 id="plan-tracker-heading">Your plan in action</h2>
           </div>
           <ul>
             {tracker.map((item) => (
@@ -255,18 +245,10 @@ export function BattleScreen() {
         </section>
       </div>
 
-      <footer className="battle-fact-strip">
-        <span>
-          Review every action and number from this moment.
-        </span>
-        <div className="fact-actions">
-          <button className="button button-quiet" type="button" onClick={() => openInspector(focusEvent.eventId)}>
-            {UI_COPY.exactEvents}
-          </button>
-        </div>
-      </footer>
-
-      <div className="battle-preferences">
+      <div className="battle-review-actions">
+        <button className="button button-quiet" type="button" onClick={() => openInspector(focusEvent.eventId)}>
+          {UI_COPY.exactEvents}
+        </button>
         <label className="check-control">
           <input
             type="checkbox"

@@ -200,3 +200,28 @@ A playable first encounter pair and comparison-only candidate lab exist. Human s
 - **Owner gate:** Name at least two candidate rules that activated, connect one rule to a numerical or status outcome, and say whether this candidate would be worth recruiting.
 - **Scope and economy boundary:** Full roster replacement, rarity weighting, recruitment cost, currencies, content expansion, and an art batch remain excluded. Unlimited new sets remain free only in the lab until a run supplies a real source and sink.
 - **Gate discipline:** The same owner remains the only tester, so fresh sessions stay 1/5 and the whole prototype remains REVISE.
+
+## Owner Playtest 05 — Single-Candidate Combat Trial — 2026-08-08
+
+- **Tester:** Owner; same tester as Owner Playtests 01–04, so fresh human sessions remain **1/5**.
+- **Scope:** Controlled generated-candidate battle, report clarity, build execution, recruitment intent, and whether the trial belongs in the player flow.
+- **Rule and outcome question:** “Idk what you mean by candidate rules, but this build for the trial was a lot clearer for combat, perhaps this report UI and autobattle style should be replicated for the main game.”
+- **Flow question:** “Is this combat trial just for me to test? I don't see why a combat trial will be required by the player in a real selection, they should read and make their choice.”
+- **Build behavior:** “I rerolled till I got a fast frame with building rhythm and focused strike and measured combo, it was so strong.”
+- **Recruitment answer:** “I wouldve recruited the one I talked about but not the few weak ones i came across from an objective pov.”
+- **Observed result:** The owner did not understand the umbrella phrase “candidate rules” and did not provide one exact rule-to-number/status explanation. That comprehension gate failed. Combat/report clarity improved, build discovery produced a deliberate synergistic combination, and recruitment intent clearly differed between strong and weak candidates.
+- **Human verdict:** **REVISE.** KEEP the presentation and generated build interaction; REMOVE a required trial from normal recruitment; REVISE player-facing terminology and the older main-loop presentation.
+- **Next iteration:** Main-loop Presentation Consolidation. Promote the trial's clearer battlefield/report hierarchy into Pressure/Punish, preserve the trial only as an internal deterministic harness, and do not add economy or full roster integration.
+- **Gate discipline:** Fresh sessions remain **1/5** and the project remains in Phase 2 despite useful Phase 3 evidence.
+
+## Browser gate 9 — Main-loop Presentation Consolidation — 2026-08-08
+
+- **Implementation state:** Complete for the bounded presentation consolidation. Normal candidate selection is read-and-choose; no Candidate trial action appears in normal navigation. The controlled fight remains behind the internal `?harness=candidate-trial` route.
+- **Battle presentation:** Pressure and Punish use focused causal moments by default, keep exact events in optional **Battle details**, explain round/action timing, and keep chosen stances visible as **Your plan in action**.
+- **Result presentation:** **What your plan did** reports Starting plan, team policy, Ada/Bo/Cy stances, trigger counts, exact typed outcomes, evidence links, and one turning point without changing battle results.
+- **Automated result:** Strict typecheck and the 173-module production build passed; Vitest passed 120/120; full Playwright passed 33/33 in 3.0 minutes; normal playback took 39.7 seconds inside the 35–75 second target; the `/Secondverse/` Pages path passed.
+- **Independent QA revision:** The first review found the desktop result battlefield stretched to the long report and Starting plan reused policy evidence. The repaired build keeps the battlefield at 448px desktop and 368px mobile, fits all six fighters in the opening viewport, has no horizontal overflow, and links Starting plan to distinct `battle_started` formation + policy evidence.
+- **Determinism:** Authored commands, simulation, aftermath, reward, save/reload, reduced-motion result, and normal/skip outcome equality remain covered. Authoritative source contains no `Math.random`.
+- **Automated verdict:** **KEEP — READY FOR OWNER PLAYTEST.** Do not infer comprehension, fun, or replay desire from this gate.
+- **Owner gate:** In the normal Pressure/Punish loop, identify one plan or stance effect made clear by the report, give one exact choice → fighter/target → number or status, and confirm whether a separate candidate combat trial feels unnecessary.
+- **Gate discipline:** Fresh sessions remain **1/5**; the whole prototype remains REVISE and Phase 2 remains open.

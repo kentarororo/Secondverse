@@ -524,7 +524,7 @@ h3 {
 
 .battle-screen {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
   height: 100vh;
   overflow: hidden;
 }
@@ -549,6 +549,26 @@ h3 {
 
 .battle-context-row .battle-rule {
   flex: 1 1 auto;
+}
+
+.battle-timing-note {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  margin-bottom: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: #13262c;
+}
+
+.battle-timing-note strong {
+  flex: 0 0 auto;
+  color: var(--signature);
+}
+
+.battle-timing-note span {
+  color: var(--muted);
 }
 
 .playback-mode-control {
@@ -1352,6 +1372,14 @@ h3 {
   pointer-events: none;
 }
 
+.battle-review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.45rem;
+}
+
 /* Inspector */
 
 .event-inspector {
@@ -1457,11 +1485,13 @@ h3 {
 .result-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.8fr);
+  align-items: start;
   gap: 1rem;
   min-height: 28rem;
 }
 
 .result-grid > .battlefield {
+  height: 28rem;
   min-height: 28rem;
   border: 1px solid var(--line);
   border-radius: 0.75rem;
@@ -1478,6 +1508,60 @@ h3 {
 
 .result-facts {
   padding: 1rem;
+}
+
+.battle-plan-report h2 {
+  margin-top: 0.15rem;
+}
+
+.battle-plan-results {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+
+.battle-plan-result {
+  display: grid;
+  gap: 0.3rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: 0.55rem;
+  padding: 0.65rem;
+  background: rgb(8 18 23 / 0.55);
+}
+
+.battle-plan-result.did-trigger {
+  border-left-color: var(--signature);
+}
+
+.battle-plan-result.did-not-trigger {
+  opacity: 0.8;
+}
+
+.battle-plan-result h3,
+.battle-plan-result p,
+.battle-plan-result small,
+.battle-turning-point p {
+  margin: 0;
+}
+
+.battle-plan-result p,
+.battle-plan-outcome {
+  color: var(--muted);
+}
+
+.battle-plan-outcome {
+  line-height: 1.45;
+}
+
+.battle-turning-point {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid var(--focus);
+  border-radius: 0.55rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem;
+  background: rgb(28 34 28 / 0.72);
 }
 
 .fact-list {
@@ -2188,6 +2272,12 @@ h3 {
     gap: 0.35rem;
   }
 
+  .battle-timing-note {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
   .playback-mode-control {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2386,6 +2476,15 @@ h3 {
     gap: 0.35rem;
   }
 
+  .battle-review-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .battle-review-actions .button {
+    width: 100%;
+  }
+
   .fact-actions {
     width: 100%;
     justify-content: space-between;
@@ -2406,6 +2505,7 @@ h3 {
   }
 
   .result-grid > .battlefield {
+    height: 23rem;
     min-height: 23rem;
     padding-bottom: 0.5rem;
   }
